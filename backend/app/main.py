@@ -14,13 +14,11 @@ from backend.app.core.logging import ExceptionHandlingMiddleware, RequestLoggerM
 from backend.app.core.redis import get_redis
 
 try:
-    from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, Counter, generate_latest
+    from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+    HAVE_PROM = True
 except Exception:  # pragma: no cover
     CONTENT_TYPE_LATEST = "text/plain; version=0.0.4; charset=utf-8"
-    CollectorRegistry = None
-    Counter = None
-    def generate_latest(_: object | None = None) -> bytes:
-        return b""
+    HAVE_PROM = False
 
 settings = get_settings()
 
@@ -171,5 +169,7 @@ async def health_db() -> dict[str, object]:
 async def metrics() -> Response:
     if not settings.enable_metrics:
         return Response(status_code=404, content="metrics disabled")
-    data = generate_latest(None)
-    return Response(content=data, media_type=CONTENT_TYPE_LATEST)
+    if HAVE_PROM:
+        data = generate_latest()
+        return Response(content=data, media_type=CONTENT_TYPE_LATEST)
+    return Response(content=b"", media_type=CONTENT_TYPE_LATEST)
