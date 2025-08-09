@@ -1,5 +1,6 @@
 """Application FastAPI principale (wiring des routes et middlewares)."""
 from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
@@ -12,7 +13,7 @@ from backend.app.core.logging import ExceptionHandlingMiddleware, RequestLoggerM
 settings = get_settings()
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Startup: auto-create tables en dev/test pour SQLite
     from backend.app.core.config import get_settings as _gs
     _settings = _gs()
@@ -52,5 +53,5 @@ app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 
 @app.get("/health")
-async def health():
+async def health() -> dict[str, str]:
     return {"status": "ok"}

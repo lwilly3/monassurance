@@ -10,6 +10,7 @@ import csv
 import io
 import json
 from datetime import datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from sqlalchemy import func
@@ -23,7 +24,7 @@ from backend.app.schemas.audit_log import AuditLogList
 router = APIRouter(prefix="/audit-logs", tags=["audit"])
 
 
-def _require_manager(user: User):
+def _require_manager(user: User) -> None:
     if user.role not in {UserRole.ADMIN, UserRole.MANAGER}:
         raise HTTPException(status_code=403, detail="Accès restreint")
 
@@ -40,7 +41,7 @@ def list_audit_logs(
     created_to: datetime | None = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> dict[str, Any]:
     """Liste paginée des logs d'audit avec filtres optionnels.
 
     Paramètres:
@@ -62,10 +63,10 @@ def list_audit_logs(
         q = q.filter(models.AuditLog.object_type == object_type)
     if action_contains:
         pattern = f"%{action_contains}%"
-        q = q.filter(models.AuditLog.action.ilike(pattern))  # type: ignore[attr-defined]
+    q = q.filter(models.AuditLog.action.ilike(pattern))
     if object_contains:
         pattern = f"%{object_contains}%"
-        q = q.filter(models.AuditLog.object_type.ilike(pattern))  # type: ignore[attr-defined]
+    q = q.filter(models.AuditLog.object_type.ilike(pattern))
     if user_id is not None:
         q = q.filter(models.AuditLog.user_id == user_id)
     if created_from:
@@ -90,7 +91,7 @@ def export_audit_logs_csv(
     delimiter: str = Query(",", pattern=r"^[,;\t|]$", description="Délimiteur CSV (parmi , ; tab |)"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-):
+) -> Response:
     """Exporte les logs d'audit en CSV.
 
     - Applique les mêmes filtres que le listing.
@@ -106,10 +107,10 @@ def export_audit_logs_csv(
         q = q.filter(models.AuditLog.object_type == object_type)
     if action_contains:
         pattern = f"%{action_contains}%"
-        q = q.filter(models.AuditLog.action.ilike(pattern))  # type: ignore[attr-defined]
+    q = q.filter(models.AuditLog.action.ilike(pattern))
     if object_contains:
         pattern = f"%{object_contains}%"
-        q = q.filter(models.AuditLog.object_type.ilike(pattern))  # type: ignore[attr-defined]
+    q = q.filter(models.AuditLog.object_type.ilike(pattern))
     if user_id is not None:
         q = q.filter(models.AuditLog.user_id == user_id)
     if created_from:

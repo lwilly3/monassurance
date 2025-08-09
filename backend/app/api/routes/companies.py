@@ -12,7 +12,7 @@ from backend.app.schemas.company import CompanyCreate, CompanyRead, CompanyUpdat
 router = APIRouter(prefix="/companies", tags=["companies"])
 
 @router.post("", response_model=CompanyRead, status_code=201)
-def create_company(payload: CompanyCreate, db: Session = Depends(get_db_session), user=Depends(require_role([models.UserRole.ADMIN, models.UserRole.MANAGER]))):
+def create_company(payload: CompanyCreate, db: Session = Depends(get_db_session), user: models.User = Depends(require_role([models.UserRole.ADMIN, models.UserRole.MANAGER]))) -> models.Company:
     if db.query(models.Company).filter((models.Company.name == payload.name) | (models.Company.code == payload.code)).first():
         raise HTTPException(status_code=400, detail="Company déjà existante")
     company = models.Company(**payload.model_dump())
@@ -22,18 +22,18 @@ def create_company(payload: CompanyCreate, db: Session = Depends(get_db_session)
     return company
 
 @router.get("", response_model=list[CompanyRead])
-def list_companies(db: Session = Depends(get_db_session)):
+def list_companies(db: Session = Depends(get_db_session)) -> list[models.Company]:
     return db.query(models.Company).order_by(models.Company.created_at.desc()).all()
 
 @router.get("/{company_id}", response_model=CompanyRead)
-def get_company(company_id: int, db: Session = Depends(get_db_session)):
+def get_company(company_id: int, db: Session = Depends(get_db_session)) -> models.Company:
     company = db.query(models.Company).filter(models.Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company introuvable")
     return company
 
 @router.put("/{company_id}", response_model=CompanyRead)
-def update_company(company_id: int, payload: CompanyUpdate, db: Session = Depends(get_db_session), user=Depends(require_role([models.UserRole.ADMIN, models.UserRole.MANAGER]))):
+def update_company(company_id: int, payload: CompanyUpdate, db: Session = Depends(get_db_session), user: models.User = Depends(require_role([models.UserRole.ADMIN, models.UserRole.MANAGER]))) -> models.Company:
     company = db.query(models.Company).filter(models.Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company introuvable")
@@ -44,7 +44,7 @@ def update_company(company_id: int, payload: CompanyUpdate, db: Session = Depend
     return company
 
 @router.delete("/{company_id}", status_code=204)
-def delete_company(company_id: int, db: Session = Depends(get_db_session), user=Depends(require_role([models.UserRole.ADMIN]))):
+def delete_company(company_id: int, db: Session = Depends(get_db_session), user: models.User = Depends(require_role([models.UserRole.ADMIN]))) -> None:
     company = db.query(models.Company).filter(models.Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company introuvable")

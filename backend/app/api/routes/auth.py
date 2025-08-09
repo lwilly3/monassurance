@@ -24,7 +24,7 @@ from backend.app.schemas.user import UserCreate, UserLogin, UserRead
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/register", response_model=UserRead, status_code=201)
-def register(payload: UserCreate, db: Session = Depends(get_db)):
+def register(payload: UserCreate, db: Session = Depends(get_db)) -> models.User:
     existing = db.query(models.User).filter(models.User.email == payload.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email déjà utilisé")
@@ -40,7 +40,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
     return user
 
 @router.post("/login", response_model=Token)
-def login(payload: UserLogin, db: Session = Depends(get_db)):
+def login(payload: UserLogin, db: Session = Depends(get_db)) -> Token:
     user = db.query(models.User).filter(models.User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Identifiants invalides")
@@ -49,7 +49,7 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
     return Token(access_token=access, refresh_token=refresh)
 
 @router.post("/refresh", response_model=Token)
-def refresh_token(payload: RefreshRequest, db: Session = Depends(get_db)):
+def refresh_token(payload: RefreshRequest, db: Session = Depends(get_db)) -> Token:
     subject = use_refresh_token(payload.refresh_token, db=db)
     if not subject:
         raise HTTPException(status_code=401, detail="Refresh token invalide")
@@ -58,6 +58,6 @@ def refresh_token(payload: RefreshRequest, db: Session = Depends(get_db)):
     return Token(access_token=access, refresh_token=new_refresh)
 
 @router.post("/logout", status_code=204)
-def logout(payload: RefreshRequest, db: Session = Depends(get_db)):
+def logout(payload: RefreshRequest, db: Session = Depends(get_db)) -> None:
     revoke_refresh_token(payload.refresh_token, db=db)
     return None

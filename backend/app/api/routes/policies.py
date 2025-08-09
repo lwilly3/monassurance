@@ -12,7 +12,7 @@ from backend.app.schemas.policy import PolicyCreate, PolicyRead, PolicyUpdate
 router = APIRouter(prefix="/policies", tags=["policies"])
 
 @router.post("", response_model=PolicyRead, status_code=201)
-def create_policy(payload: PolicyCreate, db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)):
+def create_policy(payload: PolicyCreate, db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)) -> models.Policy:
     if db.query(models.Policy).filter(models.Policy.policy_number == payload.policy_number).first():
         raise HTTPException(status_code=400, detail="Numéro de police déjà existant")
     # Validate foreign keys
@@ -30,7 +30,7 @@ def create_policy(payload: PolicyCreate, db: Session = Depends(get_db_session), 
     return policy
 
 @router.get("", response_model=list[PolicyRead])
-def list_policies(db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)):
+def list_policies(db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)) -> list[models.Policy]:
     # Limiter aux policies des clients de l'utilisateur
     return (db.query(models.Policy)
               .join(models.Client)
@@ -39,7 +39,7 @@ def list_policies(db: Session = Depends(get_db_session), user: models.User = Dep
               .all())
 
 @router.get("/{policy_id}", response_model=PolicyRead)
-def get_policy(policy_id: int, db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)):
+def get_policy(policy_id: int, db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)) -> models.Policy:
     policy = (db.query(models.Policy)
                 .join(models.Client)
                 .filter(models.Policy.id == policy_id, models.Client.owner_id == user.id)
@@ -49,7 +49,7 @@ def get_policy(policy_id: int, db: Session = Depends(get_db_session), user: mode
     return policy
 
 @router.put("/{policy_id}", response_model=PolicyRead)
-def update_policy(policy_id: int, payload: PolicyUpdate, db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)):
+def update_policy(policy_id: int, payload: PolicyUpdate, db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)) -> models.Policy:
     policy = (db.query(models.Policy)
                 .join(models.Client)
                 .filter(models.Policy.id == policy_id, models.Client.owner_id == user.id)
@@ -63,7 +63,7 @@ def update_policy(policy_id: int, payload: PolicyUpdate, db: Session = Depends(g
     return policy
 
 @router.delete("/{policy_id}", status_code=204)
-def delete_policy(policy_id: int, db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)):
+def delete_policy(policy_id: int, db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)) -> None:
     policy = (db.query(models.Policy)
                 .join(models.Client)
                 .filter(models.Policy.id == policy_id, models.Client.owner_id == user.id)

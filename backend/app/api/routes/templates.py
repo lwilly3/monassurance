@@ -28,13 +28,13 @@ from backend.app.schemas.template import (
 router = APIRouter(prefix="/templates", tags=["templates"])
 
 
-def ensure_admin_or_manager(user: User):
+def ensure_admin_or_manager(user: User) -> None:
     # Limiter aux rôles ADMIN et MANAGER pour gestion des templates
     if user.role not in {UserRole.ADMIN, UserRole.MANAGER}:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Accès refusé")
 
 @router.post("/", response_model=TemplateRead, status_code=status.HTTP_201_CREATED)
-def create_template(payload: TemplateCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def create_template(payload: TemplateCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> models.Template:
     ensure_admin_or_manager(current_user)
     tpl = models.Template(
         name=payload.name,
@@ -64,7 +64,7 @@ def create_template(payload: TemplateCreate, db: Session = Depends(get_db), curr
     return tpl
 
 @router.get("/", response_model=List[TemplateRead])
-def list_templates(skip: int = 0, limit: int = 100, active: Optional[bool] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def list_templates(skip: int = 0, limit: int = 100, active: Optional[bool] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> list[models.Template]:
     ensure_admin_or_manager(current_user)
     q = db.query(models.Template)
     if active is not None:
@@ -72,17 +72,18 @@ def list_templates(skip: int = 0, limit: int = 100, active: Optional[bool] = Non
     return q.offset(skip).limit(limit).all()
 
 @router.get("/{template_id}", response_model=TemplateWithVersions)
-def get_template(template_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def get_template(template_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> models.Template:
     ensure_admin_or_manager(current_user)
     tpl = db.query(models.Template).filter(models.Template.id == template_id).first()
     if not tpl:
         raise HTTPException(status_code=404, detail="Template not found")
     versions = db.query(models.TemplateVersion).filter(models.TemplateVersion.template_id == tpl.id).order_by(models.TemplateVersion.version).all()
-    tpl.versions = versions  # type: ignore
+    # attache dynamiquement l'attribut pour la réponse enrichie
+    tpl.versions = versions
     return tpl
 
 @router.patch("/{template_id}", response_model=TemplateRead)
-def update_template(template_id: int, payload: TemplateUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def update_template(template_id: int, payload: TemplateUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> models.Template:
     ensure_admin_or_manager(current_user)
     tpl = db.query(models.Template).filter(models.Template.id == template_id).first()
     if not tpl:
@@ -95,7 +96,7 @@ def update_template(template_id: int, payload: TemplateUpdate, db: Session = Dep
     return tpl
 
 @router.post("/{template_id}/versions", response_model=TemplateVersionRead, status_code=status.HTTP_201_CREATED)
-def add_template_version(template_id: int, payload: TemplateVersionCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def add_template_version(template_id: int, payload: TemplateVersionCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> models.TemplateVersion:
     ensure_admin_or_manager(current_user)
     tpl = db.query(models.Template).filter(models.Template.id == template_id).first()
     if not tpl:
@@ -119,7 +120,7 @@ def add_template_version(template_id: int, payload: TemplateVersionCreate, db: S
     return version
 
 @router.get("/{template_id}/versions/{version}", response_model=TemplateVersionRead)
-def get_template_version(template_id: int, version: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def get_template_version(template_id: int, version: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> models.TemplateVersion:
     ensure_admin_or_manager(current_user)
     ver = db.query(models.TemplateVersion).filter(models.TemplateVersion.template_id == template_id, models.TemplateVersion.version == version).first()
     if not ver:
@@ -127,7 +128,7 @@ def get_template_version(template_id: int, version: int, db: Session = Depends(g
     return ver
 
 @router.delete("/{template_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_template(template_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def delete_template(template_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> None:
     ensure_admin_or_manager(current_user)
     tpl = db.query(models.Template).filter(models.Template.id == template_id).first()
     if not tpl:

@@ -42,7 +42,7 @@ router = APIRouter(prefix="/documents", tags=["documents"])  # Regroupe tous les
 ALLOWED_DOWNLOADS_PER_MINUTE = 3
 _mem_counts: dict[str, tuple[int, int]] = {}  # key -> (minute_bucket, count)
 
-def _rate_limit(key: str, limit: int = ALLOWED_DOWNLOADS_PER_MINUTE):
+def _rate_limit(key: str, limit: int = ALLOWED_DOWNLOADS_PER_MINUTE) -> None:
     """Applique une limite simple de téléchargements par minute.
 
     Priorise Redis (atomique via INCR/EXPIRE). En cas d'échec (ex: tests sans Redis),
@@ -70,19 +70,19 @@ def _rate_limit(key: str, limit: int = ALLOWED_DOWNLOADS_PER_MINUTE):
             raise HTTPException(status_code=429, detail="Trop de téléchargements – réessayez plus tard")
 
 
-def can_generate(user: User):  # Génération permise pour AGENT+
+def can_generate(user: User) -> None:  # Génération permise pour AGENT+
     if user.role not in {UserRole.ADMIN, UserRole.MANAGER, UserRole.AGENT}:
         raise HTTPException(status_code=403, detail="Accès refusé")
 
-def can_admin(user: User):
+def can_admin(user: User) -> None:
     if user.role not in {UserRole.ADMIN, UserRole.MANAGER}:
         raise HTTPException(status_code=403, detail="Autorisation requise")
 
-def can_superadmin(user: User):
+def can_superadmin(user: User) -> None:
     if user.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Réservé admin")
 
-def _active_key():
+def _active_key() -> tuple[str, bytes]:
     settings = get_settings()
     kid = settings.signature_active_kid
     secret = settings.signature_keys.get(kid, settings.jwt_secret_key).encode()
@@ -114,7 +114,7 @@ def _verify_signature(doc_id: int, expires: int, signature: str) -> bool:
     return hmac.compare_digest(expected, sig_part)
 
 @router.post("/generate", response_model=GeneratedDocumentRead, status_code=201)
-def generate_document(payload: DocumentGenerateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def generate_document(payload: DocumentGenerateRequest, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> models.GeneratedDocument:
     can_generate(current_user)
     template_version = None
     if payload.template_version_id:
@@ -167,7 +167,7 @@ def generate_document(payload: DocumentGenerateRequest, db: Session = Depends(ge
     return doc
 
 @router.get("/", response_model=GeneratedDocumentList)
-def list_documents(skip: int = 0, limit: int = 50, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def list_documents(skip: int = 0, limit: int = 50, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> dict[str, int | list[models.GeneratedDocument]]:
     can_generate(current_user)
     q = db.query(models.GeneratedDocument)
     total = q.with_entities(func.count(models.GeneratedDocument.id)).scalar() or 0
@@ -175,7 +175,7 @@ def list_documents(skip: int = 0, limit: int = 50, db: Session = Depends(get_db)
     return {"items": items, "total": total}
 
 @router.get("/{doc_id}", response_model=GeneratedDocumentRead)
-def get_document(doc_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def get_document(doc_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> models.GeneratedDocument:
     can_generate(current_user)
     doc = db.query(models.GeneratedDocument).filter(models.GeneratedDocument.id == doc_id).first()
     if not doc:
@@ -183,7 +183,7 @@ def get_document(doc_id: int, db: Session = Depends(get_db), current_user: User 
     return doc
 
 @router.post("/{doc_id}/signed-url")
-def create_signed_download_url(doc_id: int, ttl_seconds: int = 300, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def create_signed_download_url(doc_id: int, ttl_seconds: int = 300, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> dict[str, int | str]:
     can_generate(current_user)
     doc = db.query(models.GeneratedDocument).filter(models.GeneratedDocument.id == doc_id).first()
     if not doc:
@@ -195,7 +195,7 @@ def create_signed_download_url(doc_id: int, ttl_seconds: int = 300, db: Session 
     return {"url": f"/api/v1/documents/{doc_id}/download?exp={expires}&sig={sig}", "expires": expires}
 
 @router.get("/{doc_id}/download")
-def download_document(request: Request, doc_id: int, exp: Optional[int] = None, sig: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def download_document(request: Request, doc_id: int, exp: Optional[int] = None, sig: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> FileResponse:
     # Si signature présente, on autorise sans rôle supplémentaire sinon contrôle standard
     if sig and exp:
         if not _verify_signature(doc_id, exp, sig):
@@ -240,7 +240,7 @@ def download_document(request: Request, doc_id: int, exp: Optional[int] = None, 
     )
 
 @router.post("/purge-orphans")
-def purge_orphans(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def purge_orphans(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> dict[str, int | list[str]]:
     can_superadmin(current_user)
     existing_paths = {Path(p[0]).resolve() for p in db.query(models.GeneratedDocument.file_path).filter(models.GeneratedDocument.file_path.isnot(None)).all()}
     root = Path(OUTPUT_DIR).resolve()
