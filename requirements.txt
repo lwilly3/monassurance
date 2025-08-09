@@ -39,6 +39,7 @@ openpyxl==3.1.5
 reportlab==4.2.2
 redis==5.0.8
 cryptography==43.0.1
+prometheus-client==0.20.0
 
 # Outils qualité / tests avancés
 # ruff==0.6.9

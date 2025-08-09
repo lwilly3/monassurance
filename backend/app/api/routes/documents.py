@@ -6,7 +6,7 @@ Ce module couvre:
  - Génération multi-format (HTML, PDF, XLSX)
  - Signature d'URL avec rotation de clés (kid) et expiration TTL
  - Téléchargement sécurisé avec contrôle RBAC + ownership
- - Rate limiting (Redis + fallback mémoire) pour limiter abus
+ - Rate limiting (Redis + fallback mémoire) pour limiter abus (spécifique aux téléchargements)
  - Compression (zlib) & chiffrement (Fernet) optionnels, métadonnées enregistrées
  - Purge de fichiers orphelins sur disque
  - Audit logging systématique (génération, téléchargement, purge)

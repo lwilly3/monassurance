@@ -46,9 +46,19 @@ def _hash_token(token: str) -> str:
     """Hash SHA-256 d'un refresh token (stockage en base sans original)."""
     return hashlib.sha256(token.encode()).hexdigest()
 
-def create_refresh_token(subject: str, db: Session) -> str:
+def create_refresh_token(
+    subject: str,
+    db: Session,
+    *,
+    device_label: str | None = None,
+    ip_address: str | None = None,
+    user_agent: str | None = None,
+) -> str:
     """Crée un refresh token aléatoire (retourne la valeur en clair) et enregistre son hash.
-    Durée: 30 jours. La rotation est gérée lors de l'utilisation."""
+    Durée: 30 jours. La rotation est gérée lors de l'utilisation.
+
+    Permet d'enregistrer des métadonnées de device (liste des appareils).
+    """
     plain = f"rt_{uuid4().hex}"
     token_hash = _hash_token(plain)
     user = db.query(models.User).filter(models.User.email == subject).first()
@@ -56,7 +66,14 @@ def create_refresh_token(subject: str, db: Session) -> str:
         # Pas d'utilisateur correspondant: on ne crée pas de token
         return ""
     expires_at = datetime.now(timezone.utc) + timedelta(days=30)
-    db_token = models.RefreshToken(user_id=user.id, token_hash=token_hash, expires_at=expires_at)
+    db_token = models.RefreshToken(
+        user_id=user.id,
+        token_hash=token_hash,
+        expires_at=expires_at,
+        device_label=device_label,
+        ip_address=ip_address,
+        user_agent=user_agent,
+    )
     db.add(db_token)
     db.commit()
     return plain
@@ -68,6 +85,18 @@ def revoke_refresh_token(token: str, db: Session) -> None:
     if db_token:
         db_token.revoked_at = datetime.now(timezone.utc)
         db.commit()
+
+def revoke_all_refresh_tokens(user_id: int, db: Session) -> int:
+    """Révoque tous les refresh tokens actifs d'un utilisateur. Retourne le nombre révoqué."""
+    now = datetime.now(timezone.utc)
+    q = db.query(models.RefreshToken).filter(models.RefreshToken.user_id == user_id, models.RefreshToken.revoked_at.is_(None))
+    count = 0
+    for t in q.all():
+        t.revoked_at = now
+        count += 1
+    if count:
+        db.commit()
+    return count
 
 def use_refresh_token(token: str, db: Session) -> Optional[str]:
     """Consomme un refresh token: vérifie validité, révoque l'ancien et retourne le subject.
