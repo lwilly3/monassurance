@@ -10,7 +10,10 @@ from backend.app.main import app
 client = TestClient(app)
 
 
-def create_user(db, email: str, role=models.UserRole.ADMIN):
+from sqlalchemy.orm import Session
+
+
+def create_user(db: Session, email: str, role: models.UserRole = models.UserRole.ADMIN) -> models.User:
     user = models.User(email=email, full_name="Admin", hashed_password=get_password_hash("pass"), role=role)
     db.add(user)
     db.commit()
@@ -18,7 +21,7 @@ def create_user(db, email: str, role=models.UserRole.ADMIN):
     return user
 
 
-def get_auth_headers(email: str = "tpladmin@example.com"):
+def get_auth_headers(email: str = "tpladmin@example.com") -> dict[str, str]:
     db = SessionLocal()
     existing = db.query(models.User).filter(models.User.email == email).first()
     if not existing:

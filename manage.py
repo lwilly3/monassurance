@@ -87,7 +87,7 @@ def cmd_testcov() -> int:
         "--cov=backend/app",
         "--cov-report=term-missing",
         "-q",
-    ])  # type: ignore[list-item]
+    ])
 
 
 def cmd_rotate_keys(new_kid: str | None) -> int:

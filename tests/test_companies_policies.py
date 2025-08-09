@@ -9,7 +9,10 @@ from backend.app.main import app
 client = TestClient(app)
 
 
-def register_and_login(email: str = "user@example.com", password: str = "pass1234"):
+from typing import Tuple
+
+
+def register_and_login(email: str = "user@example.com", password: str = "pass1234") -> tuple[str, str]:
     client.post("/api/v1/auth/register", json={"email": email, "password": password})
     r = client.post("/api/v1/auth/login", json={"email": email, "password": password})
     assert r.status_code == 200, r.text
@@ -17,7 +20,7 @@ def register_and_login(email: str = "user@example.com", password: str = "pass123
     return data["access_token"], data["refresh_token"]
 
 
-def auth_header(token: str):
+def auth_header(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
 
 
