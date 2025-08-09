@@ -15,8 +15,19 @@ branch_labels = None
 depends_on = None
 
 def upgrade() -> None:
-    userrole = sa.Enum('admin', 'agent', 'manager', name='userrole')
-    userrole.create(op.get_bind(), checkfirst=True)
+    # Crée le type ENUM userrole de manière idempotente (si absent)
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'userrole') THEN
+                CREATE TYPE userrole AS ENUM ('admin', 'agent', 'manager');
+            END IF;
+        END$$;
+        """
+    )
+    # Utiliser l'ENUM existant sans tenter de le re-créer via SQLAlchemy
+    userrole = sa.Enum('admin', 'agent', 'manager', name='userrole', create_type=False)
 
     op.create_table('users',
         sa.Column('id', sa.Integer(), primary_key=True),
@@ -75,4 +86,14 @@ def downgrade() -> None:
     op.drop_table('companies')
     op.drop_index('ix_users_email', table_name='users')
     op.drop_table('users')
-    sa.Enum(name='userrole').drop(op.get_bind(), checkfirst=True)
+    # Supprimer le type ENUM s'il existe encore
+    op.execute(
+        """
+        DO $$
+        BEGIN
+            IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'userrole') THEN
+                DROP TYPE userrole;
+            END IF;
+        END$$;
+        """
+    )

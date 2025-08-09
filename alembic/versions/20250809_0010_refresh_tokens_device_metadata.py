@@ -15,15 +15,27 @@ depends_on = None
 
 
 def upgrade() -> None:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    cols = {c['name'] for c in inspector.get_columns('refresh_tokens')}
     # Use batch for SQLite compatibility
     with op.batch_alter_table('refresh_tokens') as batch_op:
-        batch_op.add_column(sa.Column('device_label', sa.String(length=100), nullable=True))
-        batch_op.add_column(sa.Column('ip_address', sa.String(length=50), nullable=True))
-        batch_op.add_column(sa.Column('user_agent', sa.String(length=255), nullable=True))
+        if 'device_label' not in cols:
+            batch_op.add_column(sa.Column('device_label', sa.String(length=100), nullable=True))
+        if 'ip_address' not in cols:
+            batch_op.add_column(sa.Column('ip_address', sa.String(length=50), nullable=True))
+        if 'user_agent' not in cols:
+            batch_op.add_column(sa.Column('user_agent', sa.String(length=255), nullable=True))
 
 
 def downgrade() -> None:
+    bind = op.get_bind()
+    inspector = sa.inspect(bind)
+    cols = {c['name'] for c in inspector.get_columns('refresh_tokens')}
     with op.batch_alter_table('refresh_tokens') as batch_op:
-        batch_op.drop_column('user_agent')
-        batch_op.drop_column('ip_address')
-        batch_op.drop_column('device_label')
+        if 'user_agent' in cols:
+            batch_op.drop_column('user_agent')
+        if 'ip_address' in cols:
+            batch_op.drop_column('ip_address')
+        if 'device_label' in cols:
+            batch_op.drop_column('device_label')
