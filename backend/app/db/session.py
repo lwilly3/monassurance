@@ -2,8 +2,9 @@
 
 SQLite: create_all automatique pour dev/tests (Alembic pour prod/PostgreSQL).
 """
-from sqlalchemy import create_engine
 from typing import Generator
+
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from backend.app.core.config import get_settings

@@ -3,8 +3,8 @@
 Note: signature_keys permet rotation des clés de signature d'URL (kid actif).
 """
 from functools import lru_cache
-
 from typing import ClassVar
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 

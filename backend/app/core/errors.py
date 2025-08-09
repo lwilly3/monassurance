@@ -1,5 +1,4 @@
 """Handlers d'exceptions personnalisées (validation Pydantic/FastAPI)."""
-from typing import Any
 
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
