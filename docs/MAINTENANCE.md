@@ -14,6 +14,26 @@ Ce document synthétise les améliorations mises en place pour fiabiliser, maint
 - Modèles: SQLAlchemy JSON conservé pour portabilité; migration force JSONB en PG.
 - Indices: composites, partiels et GIN pour répondre aux filtres/LIKE fréquents.
 
+### Politique de migrations (model-first)
+
+Objectif: garantir que le schéma de la base soit toujours dérivé des modèles SQLAlchemy et appliqué via Alembic (cohérence code ⇄ DB).
+
+Règles:
+- Ne jamais corriger un schéma en modifiant un fichier de migration déjà existant.
+- Toute modification (colonne, type, défaut, contrainte) se fait d’abord dans le modèle SQLAlchemy.
+- Toujours utiliser `server_default=text("...")` pour les valeurs par défaut côté serveur (ex: `text("TRUE")`, `text("now()")`).
+- Après modification de modèle:
+  1) Générer une migration: `alembic revision --autogenerate -m "description"`
+  2) Relire la migration (types, `server_default`, contraintes) et l’ajuster si besoin.
+  3) Appliquer: `alembic upgrade head`.
+- En cas d’erreur (dialecte PG/SQLite/MySQL), revenir au modèle, corriger, régénérer la migration.
+- Ne jamais patcher directement la base sans migration correspondante.
+
+Bénéfices:
+- Cohérence totale entre modèles, migrations et base.
+- Migrations reproductibles, compatibles multi-environnements.
+- Réduction des incidents en production liés aux écarts de schéma.
+
 Procédure Postgres (dev/staging):
 - Copier .env.example → .env; définir DATABASE_URL Postgres.
 - Démarrer la DB: `docker compose up -d db`.
