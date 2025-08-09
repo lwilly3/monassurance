@@ -33,6 +33,7 @@ else:
 # Slow query logging (dev): log > 0.5s
 try:
     from typing import Any
+
     from loguru import logger
 
     @event.listens_for(engine, "after_cursor_execute")

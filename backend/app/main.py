@@ -1,8 +1,7 @@
 """Application FastAPI principale (wiring des routes et middlewares)."""
 from contextlib import asynccontextmanager
-from typing import AsyncIterator
+from typing import AsyncIterator, Awaitable, Callable
 
-from typing import Awaitable, Callable
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
