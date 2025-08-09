@@ -9,7 +9,6 @@ from backend.app.main import app
 client = TestClient(app)
 
 
-from typing import Tuple
 
 
 def register_and_login(email: str = "user@example.com", password: str = "pass1234") -> tuple[str, str]:
