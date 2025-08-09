@@ -5,7 +5,7 @@ Principes:
  - Refresh token stocké hashé en base, rotation à chaque usage.
  - Logout = révocation du refresh token passé.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from backend.app.core.security import (
@@ -57,7 +57,7 @@ def refresh_token(payload: RefreshRequest, db: Session = Depends(get_db)) -> Tok
     new_refresh = create_refresh_token(subject=subject, db=db)
     return Token(access_token=access, refresh_token=new_refresh)
 
-@router.post("/logout", status_code=204)
-def logout(payload: RefreshRequest, db: Session = Depends(get_db)) -> None:
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+def logout(payload: RefreshRequest, db: Session = Depends(get_db)) -> Response:
     revoke_refresh_token(payload.refresh_token, db=db)
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -2,7 +2,7 @@
 
 Accès en écriture restreint aux rôles MANAGER/ADMIN (delete: ADMIN).
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from backend.app.api.deps import get_db_session, require_role
@@ -43,11 +43,11 @@ def update_company(company_id: int, payload: CompanyUpdate, db: Session = Depend
     db.refresh(company)
     return company
 
-@router.delete("/{company_id}", status_code=204)
-def delete_company(company_id: int, db: Session = Depends(get_db_session), user: models.User = Depends(require_role([models.UserRole.ADMIN]))) -> None:
+@router.delete("/{company_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+def delete_company(company_id: int, db: Session = Depends(get_db_session), user: models.User = Depends(require_role([models.UserRole.ADMIN]))) -> Response:
     company = db.query(models.Company).filter(models.Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=404, detail="Company introuvable")
     db.delete(company)
     db.commit()
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

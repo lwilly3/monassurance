@@ -2,7 +2,7 @@
 
 Filtré par ownership via le client.owner_id de l'utilisateur authentifié.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from backend.app.api.deps import get_current_user, get_db_session
@@ -62,8 +62,8 @@ def update_policy(policy_id: int, payload: PolicyUpdate, db: Session = Depends(g
     db.refresh(policy)
     return policy
 
-@router.delete("/{policy_id}", status_code=204)
-def delete_policy(policy_id: int, db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)) -> None:
+@router.delete("/{policy_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+def delete_policy(policy_id: int, db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)) -> Response:
     policy = (db.query(models.Policy)
                 .join(models.Client)
                 .filter(models.Policy.id == policy_id, models.Client.owner_id == user.id)
@@ -72,4 +72,4 @@ def delete_policy(policy_id: int, db: Session = Depends(get_db_session), user: m
         raise HTTPException(status_code=404, detail="Police introuvable")
     db.delete(policy)
     db.commit()
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

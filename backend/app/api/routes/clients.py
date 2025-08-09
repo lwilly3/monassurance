@@ -2,7 +2,7 @@
 
 Chaque client est attaché via owner_id; isolation stricte par utilisateur.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from backend.app.api.deps import get_current_user, get_db_session
@@ -43,11 +43,11 @@ def update_client(client_id: int, payload: ClientUpdate, db: Session = Depends(g
     db.refresh(client)
     return client
 
-@router.delete("/{client_id}", status_code=204)
-def delete_client(client_id: int, db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)) -> None:
+@router.delete("/{client_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+def delete_client(client_id: int, db: Session = Depends(get_db_session), user: models.User = Depends(get_current_user)) -> Response:
     client = db.query(models.Client).filter(models.Client.id == client_id, models.Client.owner_id == user.id).first()
     if not client:
         raise HTTPException(status_code=404, detail="Client introuvable")
     db.delete(client)
     db.commit()
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

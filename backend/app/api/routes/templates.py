@@ -10,7 +10,7 @@ Règles:
 from hashlib import sha256
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
 from backend.app.api.deps import get_current_user, get_db
@@ -127,12 +127,12 @@ def get_template_version(template_id: int, version: int, db: Session = Depends(g
         raise HTTPException(status_code=404, detail="Version not found")
     return ver
 
-@router.delete("/{template_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_template(template_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> None:
+@router.delete("/{template_id}", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
+def delete_template(template_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> Response:
     ensure_admin_or_manager(current_user)
     tpl = db.query(models.Template).filter(models.Template.id == template_id).first()
     if not tpl:
         raise HTTPException(status_code=404, detail="Template not found")
     db.delete(tpl)
     db.commit()
-    return None
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

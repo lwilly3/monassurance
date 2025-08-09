@@ -63,10 +63,10 @@ def list_audit_logs(
         q = q.filter(models.AuditLog.object_type == object_type)
     if action_contains:
         pattern = f"%{action_contains}%"
-    q = q.filter(models.AuditLog.action.ilike(pattern))
+        q = q.filter(models.AuditLog.action.ilike(pattern))
     if object_contains:
         pattern = f"%{object_contains}%"
-    q = q.filter(models.AuditLog.object_type.ilike(pattern))
+        q = q.filter(models.AuditLog.object_type.ilike(pattern))
     if user_id is not None:
         q = q.filter(models.AuditLog.user_id == user_id)
     if created_from:
@@ -107,10 +107,10 @@ def export_audit_logs_csv(
         q = q.filter(models.AuditLog.object_type == object_type)
     if action_contains:
         pattern = f"%{action_contains}%"
-    q = q.filter(models.AuditLog.action.ilike(pattern))
+        q = q.filter(models.AuditLog.action.ilike(pattern))
     if object_contains:
         pattern = f"%{object_contains}%"
-    q = q.filter(models.AuditLog.object_type.ilike(pattern))
+        q = q.filter(models.AuditLog.object_type.ilike(pattern))
     if user_id is not None:
         q = q.filter(models.AuditLog.user_id == user_id)
     if created_from:
