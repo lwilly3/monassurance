@@ -1,6 +1,5 @@
 import os
 import pathlib
-import shutil
 from typing import Any
 
 import pytest
