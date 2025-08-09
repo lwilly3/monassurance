@@ -61,10 +61,10 @@ def cmd_lint() -> int:
     Convention: échec immédiat si ruff échoue (évite compilation mypy inutile).
     Retourne le premier code de sortie non nul rencontré.
     """
-    code = run([sys.executable, "-m", "ruff", "check", "--fix", "."])  # type: ignore[list-item]
+    code = run([sys.executable, "-m", "ruff", "check", "--fix", "."])  
     if code != 0:
         return code
-    return run([sys.executable, "-m", "mypy", "backend/app"])  # type: ignore[list-item]
+    return run([sys.executable, "-m", "mypy", "backend/app"])  
 
 
 def cmd_test() -> int:
@@ -72,7 +72,7 @@ def cmd_test() -> int:
 
     Utilisé pour feedback rapide local ou étape CI.
     """
-    return run([sys.executable, "-m", "pytest", "-q"])  # type: ignore[list-item]
+    return run([sys.executable, "-m", "pytest", "-q"]) 
 
 
 def cmd_testcov() -> int:
