@@ -5,6 +5,7 @@ Revises:
 Create Date: 2025-08-08
 """
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql as psql
 
 from alembic import op
 
@@ -15,19 +16,24 @@ branch_labels = None
 depends_on = None
 
 def upgrade() -> None:
-    # Crée le type ENUM userrole de manière idempotente (si absent)
-    op.execute(
-        """
-        DO $$
-        BEGIN
-            IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'userrole') THEN
-                CREATE TYPE userrole AS ENUM ('admin', 'agent', 'manager');
-            END IF;
-        END$$;
-        """
-    )
-    # Utiliser l'ENUM existant sans tenter de le re-créer via SQLAlchemy
-    userrole = sa.Enum('admin', 'agent', 'manager', name='userrole', create_type=False)
+    dialect = op.get_context().dialect.name
+    if dialect == 'postgresql':
+        # Crée le type ENUM userrole de manière idempotente (si absent)
+        op.execute(
+            """
+            DO $$
+            BEGIN
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'userrole') THEN
+                    CREATE TYPE userrole AS ENUM ('admin', 'agent', 'manager');
+                END IF;
+            END$$;
+            """
+        )
+        # Référencer le type existant sans tenter de le re-créer
+        userrole = psql.ENUM('admin', 'agent', 'manager', name='userrole', create_type=False)
+    else:
+        # Dialectes non-PG: fallback String
+        userrole = sa.String(length=50)
 
     op.create_table('users',
         sa.Column('id', sa.Integer(), primary_key=True),
@@ -86,14 +92,15 @@ def downgrade() -> None:
     op.drop_table('companies')
     op.drop_index('ix_users_email', table_name='users')
     op.drop_table('users')
-    # Supprimer le type ENUM s'il existe encore
-    op.execute(
-        """
-        DO $$
-        BEGIN
-            IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'userrole') THEN
-                DROP TYPE userrole;
-            END IF;
-        END$$;
-        """
-    )
+    if op.get_context().dialect.name == 'postgresql':
+        # Supprimer le type ENUM s'il existe encore
+        op.execute(
+            """
+            DO $$
+            BEGIN
+                IF EXISTS (SELECT 1 FROM pg_type WHERE typname = 'userrole') THEN
+                    DROP TYPE userrole;
+                END IF;
+            END$$;
+            """
+        )
