@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import TYPE_CHECKING, Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String
+from sqlalchemy import DateTime, ForeignKey, Integer, String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from backend.app.db.base import Base
@@ -24,9 +24,9 @@ class Policy(Base):
     premium_amount: Mapped[int] = mapped_column(Integer)
     effective_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     expiry_date: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    status: Mapped[str | None] = mapped_column(String(30), default="active")
-    currency: Mapped[str | None] = mapped_column(String(3), default="XAF")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP"))
+    status: Mapped[str | None] = mapped_column(String(30), server_default=text("'active'"))
+    currency: Mapped[str | None] = mapped_column(String(3), server_default=text("'XAF'"))
 
     client: Mapped[Client] = relationship(back_populates="policies")
     company: Mapped[Optional[Company]] = relationship(back_populates="policies")
