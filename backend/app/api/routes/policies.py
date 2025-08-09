@@ -4,9 +4,10 @@ Filtré par ownership via le client.owner_id de l'utilisateur authentifié.
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from backend.app.schemas.policy import PolicyCreate, PolicyRead, PolicyUpdate
+
+from backend.app.api.deps import get_current_user, get_db_session
 from backend.app.db import models
-from backend.app.api.deps import get_db_session, get_current_user
+from backend.app.schemas.policy import PolicyCreate, PolicyRead, PolicyUpdate
 
 router = APIRouter(prefix="/policies", tags=["policies"])
 

@@ -1,14 +1,13 @@
 """Application FastAPI principale (wiring des routes et middlewares)."""
-from fastapi import FastAPI
 from contextlib import asynccontextmanager
-from backend.app.api.routes import auth, clients, companies, policies
-from backend.app.api.routes import documents
-from backend.app.api.routes import audit_logs
-from backend.app.api.routes import templates
-from backend.app.core.logging import RequestLoggerMiddleware, ExceptionHandlingMiddleware
-from backend.app.core.errors import validation_exception_handler
+
+from fastapi import FastAPI
 from fastapi.exceptions import RequestValidationError
+
+from backend.app.api.routes import audit_logs, auth, clients, companies, documents, policies, templates
 from backend.app.core.config import get_settings
+from backend.app.core.errors import validation_exception_handler
+from backend.app.core.logging import ExceptionHandlingMiddleware, RequestLoggerMiddleware
 
 settings = get_settings()
 
@@ -18,10 +17,11 @@ async def lifespan(app: FastAPI):
     from backend.app.core.config import get_settings as _gs
     _settings = _gs()
     if _settings.database_url.startswith("sqlite"):
+        from sqlalchemy import inspect, text
+
         from backend.app.db import models  # noqa: F401
         from backend.app.db.base import Base
         from backend.app.db.session import engine
-        from sqlalchemy import text, inspect
         Base.metadata.create_all(bind=engine)
         inspector = inspect(engine)
         if 'policies' in inspector.get_table_names():

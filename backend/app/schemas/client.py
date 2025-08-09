@@ -1,5 +1,7 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, EmailStr
+
 
 class ClientBase(BaseModel):
     first_name: str

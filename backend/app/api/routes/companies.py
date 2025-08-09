@@ -4,9 +4,10 @@ Accès en écriture restreint aux rôles MANAGER/ADMIN (delete: ADMIN).
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from backend.app.schemas.company import CompanyCreate, CompanyRead, CompanyUpdate
-from backend.app.db import models
+
 from backend.app.api.deps import get_db_session, require_role
+from backend.app.db import models
+from backend.app.schemas.company import CompanyCreate, CompanyRead, CompanyUpdate
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 

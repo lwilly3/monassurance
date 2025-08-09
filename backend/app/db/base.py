@@ -1,12 +1,10 @@
 """Base ORM commune pour toutes les entités.
 
-__tablename__ dérivé automatiquement du nom de classe en lowercase.
+Utiliser une Base minimale afin que mypy (avec le plugin SQLAlchemy)
+n'entre pas en conflit avec les attributs déclarés dans les sous-classes.
 """
-from sqlalchemy.orm import DeclarativeBase, declared_attr
+from sqlalchemy.orm import DeclarativeBase
+
 
 class Base(DeclarativeBase):
-    id: int  # typing hint placeholder
-
-    @declared_attr.directive
-    def __tablename__(cls) -> str:  # type: ignore
-        return cls.__name__.lower()
+    pass

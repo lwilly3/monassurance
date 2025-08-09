@@ -1,14 +1,16 @@
+import os
+import sys
 from logging.config import fileConfig
+
 from sqlalchemy import engine_from_config, pool
+
 from alembic import context
-import os, sys
 
 # Add backend to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from backend.app.core.config import get_settings
 from backend.app.db.base import Base  # noqa
-from backend.app.db import models  # noqa: ensure models imported
 
 config = context.config
 settings = get_settings()

@@ -1,18 +1,20 @@
 from __future__ import annotations
+
 """Service de rendu de documents multi-format.
 
 Fonctions:
  - render_template: produit un binaire selon le format (html, pdf, xlsx)
  - store_output: persiste le binaire sur disque avec nom déterministe (hash) + métadonnées
 """
+import hashlib
+from io import BytesIO
 from pathlib import Path
 from typing import Any
-import os, hashlib
+
 from jinja2 import Template as JinjaTemplate
-from io import BytesIO
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4
 from openpyxl import Workbook
+from reportlab.lib.pagesizes import A4  # type: ignore[import-untyped]
+from reportlab.pdfgen import canvas  # type: ignore[import-untyped]
 
 OUTPUT_DIR = Path("generated")
 OUTPUT_DIR.mkdir(exist_ok=True)
@@ -62,6 +64,7 @@ def render_template(content: str, context: dict[str, Any] | None, fmt: str) -> b
         # content ignoré si vide: on transforme contexte en table clé/valeur
         wb = Workbook()
         ws = wb.active
+        assert ws is not None
         ws.title = "Data"
         if ctx:
             ws.append(["Key", "Value"])

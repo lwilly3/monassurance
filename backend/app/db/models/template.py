@@ -1,7 +1,14 @@
 from datetime import datetime, timezone
-from sqlalchemy import String, DateTime, Boolean, Integer, Text, ForeignKey, UniqueConstraint
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from backend.app.db.base import Base
+
+if TYPE_CHECKING:
+    from .template_version import TemplateVersion
+
 
 class Template(Base):
     """Template logique (métadonnées), versions séparées dans TemplateVersion."""

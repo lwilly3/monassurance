@@ -1,7 +1,10 @@
 from datetime import datetime, timezone
-from sqlalchemy import String, DateTime, Integer, ForeignKey
+
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
+
 from backend.app.db.base import Base
+
 
 class RefreshToken(Base):
     """Refresh token hashé (rotation, chaîne parent->enfant)."""

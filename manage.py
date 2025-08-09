@@ -37,11 +37,11 @@ Remarques
 - Les sorties sont orientées pipeline CI (codes retour explicites).
 """
 from __future__ import annotations
-import os
-import sys
+
 import base64
 import secrets
 import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).parent

@@ -8,9 +8,10 @@ Expose helpers:
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from backend.app.db.session import get_db
+
 from backend.app.core.security import decode_token
 from backend.app.db import models
+from backend.app.db.session import get_db
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 

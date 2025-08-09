@@ -1,6 +1,8 @@
-from sqlalchemy import Integer, ForeignKey, JSON
+from sqlalchemy import JSON, ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column
+
 from backend.app.db.base import Base
+
 
 class DeclarationItem(Base):
     """Ligne d'une déclaration (montants + référence police)."""

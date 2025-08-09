@@ -1,7 +1,10 @@
 from datetime import datetime, timezone
-from sqlalchemy import String, DateTime, ForeignKey
+
+from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
+
 from backend.app.db.base import Base
+
 
 class DeclarationBatch(Base):
     """Lot de déclaration (période + statut + document récap)."""

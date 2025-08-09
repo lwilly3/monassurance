@@ -1,9 +1,11 @@
 import uuid
+
 from fastapi.testclient import TestClient
-from backend.app.main import app
-from backend.app.db.session import SessionLocal
-from backend.app.db import models
+
 from backend.app.core.security import get_password_hash
+from backend.app.db import models
+from backend.app.db.session import SessionLocal
+from backend.app.main import app
 
 client = TestClient(app)
 

@@ -1,7 +1,10 @@
 from datetime import datetime, timezone
-from sqlalchemy import String, DateTime, JSON, Integer, ForeignKey
+
+from sqlalchemy import JSON, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
+
 from backend.app.db.base import Base
+
 
 class AuditLog(Base):
     """Trace des actions sensibles (download, generate, purge...)."""

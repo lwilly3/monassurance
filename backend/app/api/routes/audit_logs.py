@@ -6,12 +6,16 @@ Fonctionnalités:
  - Tri (ordre inverse chronologique)
  - Restreint aux rôles MANAGER+ (inclut ADMIN)
 """
+import csv
+import io
+import json
 from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Response
-import csv, io, json
-from sqlalchemy.orm import Session
 from sqlalchemy import func
-from backend.app.api.deps import get_db, get_current_user
+from sqlalchemy.orm import Session
+
+from backend.app.api.deps import get_current_user, get_db
 from backend.app.db import models
 from backend.app.db.models.user import User, UserRole
 from backend.app.schemas.audit_log import AuditLogList

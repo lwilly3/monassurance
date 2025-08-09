@@ -1,15 +1,14 @@
 #!/usr/bin/env python
 """Generate ER diagram from SQLAlchemy models."""
 import os
-from sqlalchemy import create_engine
+
 from sqlalchemy_schemadisplay import create_schema_graph
-from backend.app.core.config import get_settings
+
 from backend.app.db import models  # noqa: F401 ensure models imported
 from backend.app.db.base import Base
 
+
 def main():
-    settings = get_settings()
-    engine = create_engine(settings.database_url)
     graph = create_schema_graph(metadata=Base.metadata, show_datatypes=False, show_indexes=False, rankdir='LR')
     out_path = os.path.join(os.path.dirname(__file__), '..', 'docs')
     os.makedirs(out_path, exist_ok=True)

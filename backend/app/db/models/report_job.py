@@ -1,7 +1,10 @@
 from datetime import datetime, timezone
-from sqlalchemy import String, DateTime, JSON
+
+from sqlalchemy import JSON, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
+
 from backend.app.db.base import Base
+
 
 class ReportJob(Base):
     """Job de génération de rapports (pour future exécution asynchrone)."""

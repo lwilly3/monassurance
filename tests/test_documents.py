@@ -1,8 +1,9 @@
 from fastapi.testclient import TestClient
-from backend.app.main import app
-from backend.app.db.session import SessionLocal
-from backend.app.db import models
+
 from backend.app.core.security import get_password_hash
+from backend.app.db import models
+from backend.app.db.session import SessionLocal
+from backend.app.main import app
 
 client = TestClient(app)
 
@@ -142,7 +143,6 @@ def test_generate_encrypted_and_compressed():
 
 def test_purge_orphans_requires_admin():
     token, _ = login()  # admin
-    from pathlib import Path
     from backend.app.services.document_renderer import OUTPUT_DIR
     orphan = OUTPUT_DIR / "doc_orphan.txt"
     orphan.write_text("orphan")

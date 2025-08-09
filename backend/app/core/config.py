@@ -2,12 +2,17 @@
 
 Note: signature_keys permet rotation des clés de signature d'URL (kid actif).
 """
-from pydantic import BaseModel, ConfigDict
-from pydantic_settings import BaseSettings
 from functools import lru_cache
 
+from typing import ClassVar
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
 class Settings(BaseSettings):
-    model_config = ConfigDict(env_file=".env", case_sensitive=False)
+    model_config: ClassVar[SettingsConfigDict] = {
+        "env_file": ".env",
+        "case_sensitive": False,
+    }
     database_url: str = "sqlite:///./monassurance.db"
     jwt_secret_key: str = "p8qX9VvZr3sWm2FjA0uLxY6DdNeHtKbC"
     jwt_algorithm: str = "HS256"

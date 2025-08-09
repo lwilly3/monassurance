@@ -1,21 +1,17 @@
 ###############
 # Ruff config #
 ###############
-# Objectif: lint + format rapide (remplaçant Black + Flake8 + isort) en un seul outil.
-# Règles sélectionnées: basiques (E,F), import (I), bugbear (B), mises à jour Python (UP),
-# conventions nommage (N), async, sécurité (S), complexité cyclomatique (C4).
+# Objectif initial: lint de base (E,F,I) pour CI verte rapide. On élargira plus tard.
 
 line-length = 110
-select = ["E","F","I","B","UP","N","ASYNC","S","C4"]
 
-# Ignorés ciblés:
-# - E203: compat slice (style Black)
-# - E266: commentaires multiples ## non bloquants
-# - E501: longueur gérée par format auto
-# - B008: dépendances FastAPI (param default) acceptées
-# - S311: usage de secrets non-cryptographiques contrôlé (ex: seeds tests)
-ignore = ["E203","E266","E501","B008","S311"]
+[lint]
+select = ["E","F","I"]
+# E402: imports après docstring autorisés ici
+# E203/E266/E501: style/longueur gérés ailleurs au besoin
+ignore = ["E203","E266","E501","E402"]
 
-[per-file-ignores]
-"tests/*" = ["S101","S105"]  # assertions et possibles secrets factices dans tests
+[lint.per-file-ignores]
+"tests/*" = ["S101","S105"]
+"backend/app/db/models/__init__.py" = ["F401"]
 

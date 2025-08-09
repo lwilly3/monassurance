@@ -1,7 +1,10 @@
 from datetime import datetime, timezone
-from sqlalchemy import String, DateTime, Text, Integer, ForeignKey, JSON, Boolean
+
+from sqlalchemy import JSON, DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
+
 from backend.app.db.base import Base
+
 
 class IntegrationConfig(Base):
     """Configuration d'intégration externe pour une compagnie."""

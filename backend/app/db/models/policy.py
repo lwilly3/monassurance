@@ -1,9 +1,17 @@
 from __future__ import annotations
+
 from datetime import datetime, timezone
-from typing import Optional
-from sqlalchemy import String, DateTime, Integer, ForeignKey
+from typing import TYPE_CHECKING, Optional
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from backend.app.db.base import Base
+
+if TYPE_CHECKING:
+    from .client import Client
+    from .company import Company
+
 
 class Policy(Base):
     """Police d'assurance (lien client + compagnie)."""
@@ -20,5 +28,5 @@ class Policy(Base):
     status: Mapped[str | None] = mapped_column(String(30), default="active")
     currency: Mapped[str | None] = mapped_column(String(3), default="XAF")
 
-    client: Mapped["Client"] = relationship(back_populates="policies")
-    company: Mapped[Optional["Company"]] = relationship(back_populates="policies")
+    client: Mapped[Client] = relationship(back_populates="policies")
+    company: Mapped[Optional[Company]] = relationship(back_populates="policies")

@@ -5,8 +5,10 @@ Expose:
  - RequestLoggerMiddleware: trace les requêtes HTTP entrantes
  - ExceptionHandlingMiddleware: capture exceptions non gérées et retourne 500 JSON
 """
-from loguru import logger
 import sys
+from typing import Any, Awaitable, Callable
+
+from loguru import logger
 
 # Configuration basique Loguru (stdout, niveau INFO)
 logger.remove()
@@ -21,10 +23,10 @@ logger.add(
 
 
 class RequestLoggerMiddleware:
-    def __init__(self, app):
+    def __init__(self, app: Callable[[dict[str, Any], Callable[..., Awaitable[Any]], Callable[..., Awaitable[Any]]], Awaitable[Any]]):
         self.app = app
 
-    async def __call__(self, scope, receive, send):  # type: ignore[override]
+    async def __call__(self, scope: dict[str, Any], receive: Callable[..., Awaitable[Any]], send: Callable[..., Awaitable[Any]]) -> None:  # type: ignore[override]
         if scope.get("type") != "http":
             await self.app(scope, receive, send)
             return
@@ -35,10 +37,10 @@ class RequestLoggerMiddleware:
 
 
 class ExceptionHandlingMiddleware:
-    def __init__(self, app):
+    def __init__(self, app: Callable[[dict[str, Any], Callable[..., Awaitable[Any]], Callable[..., Awaitable[Any]]], Awaitable[Any]]):
         self.app = app
 
-    async def __call__(self, scope, receive, send):  # type: ignore[override]
+    async def __call__(self, scope: dict[str, Any], receive: Callable[..., Awaitable[Any]], send: Callable[..., Awaitable[Any]]) -> None:  # type: ignore[override]
         if scope.get("type") != "http":
             await self.app(scope, receive, send)
             return

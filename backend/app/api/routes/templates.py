@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """Routes CRUD pour les templates et leurs versions.
 
 Règles:
@@ -6,17 +7,23 @@ Règles:
  - Création d'une première version (v1) facultative lors du create si contenu fourni.
  - Numérotation des versions incrémentale et immuable.
 """
+from hashlib import sha256
+from typing import List, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List, Optional
-from backend.app.api.deps import get_db, get_current_user
+
+from backend.app.api.deps import get_current_user, get_db
 from backend.app.db import models
-from backend.app.schemas.template import (
-    TemplateCreate, TemplateRead, TemplateUpdate,
-    TemplateVersionCreate, TemplateVersionRead, TemplateWithVersions
-)
 from backend.app.db.models.user import User, UserRole
-from hashlib import sha256
+from backend.app.schemas.template import (
+    TemplateCreate,
+    TemplateRead,
+    TemplateUpdate,
+    TemplateVersionCreate,
+    TemplateVersionRead,
+    TemplateWithVersions,
+)
 
 router = APIRouter(prefix="/templates", tags=["templates"])
 

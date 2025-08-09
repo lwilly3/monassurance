@@ -1,8 +1,12 @@
 from __future__ import annotations
+
 """Fournit un client Redis singleton (lru_cache)."""
-import redis
 from functools import lru_cache
+
+import redis
+
 from backend.app.core.config import get_settings
+
 
 @lru_cache(maxsize=1)
 def get_redis():

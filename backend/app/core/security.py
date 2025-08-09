@@ -1,11 +1,13 @@
+import hashlib
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-from jose import jwt, JWTError
-from passlib.context import CryptContext
-from backend.app.core.config import get_settings
 from uuid import uuid4
-import hashlib
+
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+
+from backend.app.core.config import get_settings
 from backend.app.db import models
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")  # Gestion du hash des mots de passe
@@ -47,10 +49,12 @@ def _hash_token(token: str) -> str:
 def create_refresh_token(subject: str, db: Session) -> str:
     """Crée un refresh token aléatoire (retourne la valeur en clair) et enregistre son hash.
     Durée: 30 jours. La rotation est gérée lors de l'utilisation."""
-    settings = get_settings()
     plain = f"rt_{uuid4().hex}"
     token_hash = _hash_token(plain)
     user = db.query(models.User).filter(models.User.email == subject).first()
+    if user is None:
+        # Pas d'utilisateur correspondant: on ne crée pas de token
+        return ""
     expires_at = datetime.now(timezone.utc) + timedelta(days=30)
     db_token = models.RefreshToken(user_id=user.id, token_hash=token_hash, expires_at=expires_at)
     db.add(db_token)

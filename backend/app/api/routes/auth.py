@@ -7,20 +7,19 @@ Principes:
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from backend.app.schemas.user import UserCreate, UserLogin, UserRead
-from backend.app.schemas.auth import Token, RefreshRequest
-from backend.app.db import models
-from backend.app.db.session import get_db
+
 from backend.app.core.security import (
-    get_password_hash,
-    verify_password,
     create_access_token,
     create_refresh_token,
-    use_refresh_token,
+    get_password_hash,
     revoke_refresh_token,
+    use_refresh_token,
+    verify_password,
 )
-from fastapi import Depends
-from backend.app.api.deps import get_current_user
+from backend.app.db import models
+from backend.app.db.session import get_db
+from backend.app.schemas.auth import RefreshRequest, Token
+from backend.app.schemas.user import UserCreate, UserLogin, UserRead
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 

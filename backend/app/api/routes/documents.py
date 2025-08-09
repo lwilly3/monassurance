@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 """Endpoints de gestion des documents générés.
 
 Ce module couvre:
@@ -10,23 +11,31 @@ Ce module couvre:
  - Purge de fichiers orphelins sur disque
  - Audit logging systématique (génération, téléchargement, purge)
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from fastapi.responses import FileResponse
+import base64
+import hashlib
+import hmac
+import time
+import zlib
 from pathlib import Path
-import time, hmac, hashlib, base64, zlib
 from typing import Optional
+
 from cryptography.fernet import Fernet
-from backend.app.core.redis import get_redis
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import FileResponse
 from sqlalchemy import func
-from backend.app.api.deps import get_db, get_current_user
-from backend.app.db import models
-from backend.app.schemas.generated_document import (
-    DocumentGenerateRequest, GeneratedDocumentRead, GeneratedDocumentList
-)
-from backend.app.services.document_renderer import render_template, store_output, OUTPUT_DIR
+from sqlalchemy.orm import Session
+
+from backend.app.api.deps import get_current_user, get_db
 from backend.app.core.config import get_settings
+from backend.app.core.redis import get_redis
+from backend.app.db import models
 from backend.app.db.models.user import User, UserRole
+from backend.app.schemas.generated_document import (
+    DocumentGenerateRequest,
+    GeneratedDocumentList,
+    GeneratedDocumentRead,
+)
+from backend.app.services.document_renderer import OUTPUT_DIR, render_template, store_output
 
 router = APIRouter(prefix="/documents", tags=["documents"])  # Regroupe tous les endpoints liés aux documents
 

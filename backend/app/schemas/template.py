@@ -1,6 +1,8 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class TemplateBase(BaseModel):
     name: str = Field(..., max_length=255)

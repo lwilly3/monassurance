@@ -1,7 +1,14 @@
 from datetime import datetime, timezone
-from sqlalchemy import String, DateTime, Boolean
+from typing import TYPE_CHECKING
+
+from sqlalchemy import Boolean, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from backend.app.db.base import Base
+
+if TYPE_CHECKING:
+    from .policy import Policy
+
 
 class Company(Base):
     """Compagnie (potentiel partenaire ou assureur)."""

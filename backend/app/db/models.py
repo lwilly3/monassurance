@@ -1,8 +1,22 @@
 from datetime import datetime, timezone
 from enum import Enum
-from sqlalchemy import String, ForeignKey, DateTime, Enum as SQLEnum, Boolean, Text, Integer, JSON, BigInteger, UniqueConstraint
+
+from sqlalchemy import (
+    JSON,
+    BigInteger,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from backend.app.db.base import Base
+
 
 class UserRole(str, Enum):
     ADMIN = "admin"

@@ -1,8 +1,10 @@
-from fastapi.testclient import TestClient
-from backend.app.main import app
-from backend.app.db.session import SessionLocal
-from backend.app.db import models
 from uuid import uuid4
+
+from fastapi.testclient import TestClient
+
+from backend.app.db import models
+from backend.app.db.session import SessionLocal
+from backend.app.main import app
 
 client = TestClient(app)
 

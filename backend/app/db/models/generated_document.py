@@ -1,7 +1,10 @@
 from datetime import datetime, timezone
-from sqlalchemy import String, DateTime, BigInteger, ForeignKey, JSON
+
+from sqlalchemy import JSON, BigInteger, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
+
 from backend.app.db.base import Base
+
 
 class GeneratedDocument(Base):
     """Document généré et stocké (path + métadonnées de rendu)."""

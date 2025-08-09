@@ -1,9 +1,17 @@
 from __future__ import annotations
+
 from datetime import datetime, timezone
-from typing import Optional, List
-from sqlalchemy import String, DateTime, Text, ForeignKey
+from typing import TYPE_CHECKING, List, Optional
+
+from sqlalchemy import DateTime, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from backend.app.db.base import Base
+
+if TYPE_CHECKING:
+    from .policy import Policy
+    from .user import User
+
 
 class Client(Base):
     """Client final rattaché à un utilisateur propriétaire."""
@@ -17,5 +25,5 @@ class Client(Base):
     owner_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
-    owner: Mapped[Optional["User"]] = relationship(back_populates="clients")
-    policies: Mapped[List["Policy"]] = relationship(back_populates="client")
+    owner: Mapped[Optional[User]] = relationship(back_populates="clients")
+    policies: Mapped[List[Policy]] = relationship(back_populates="client")

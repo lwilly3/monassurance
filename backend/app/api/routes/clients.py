@@ -4,9 +4,10 @@ Chaque client est attaché via owner_id; isolation stricte par utilisateur.
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from backend.app.schemas.client import ClientCreate, ClientRead, ClientUpdate
+
+from backend.app.api.deps import get_current_user, get_db_session
 from backend.app.db import models
-from backend.app.api.deps import get_db_session, get_current_user
+from backend.app.schemas.client import ClientCreate, ClientRead, ClientUpdate
 
 router = APIRouter(prefix="/clients", tags=["clients"])
 

@@ -1,6 +1,8 @@
-from sqlalchemy import Integer, ForeignKey
+from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
+
 from backend.app.db.base import Base
+
 
 class TemplateCompany(Base):
     __tablename__ = "template_companies"
