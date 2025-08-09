@@ -10,6 +10,7 @@ import sys
 from typing import Any, Awaitable, Callable
 
 from loguru import logger
+
 from backend.app.core.config import get_settings
 
 try:

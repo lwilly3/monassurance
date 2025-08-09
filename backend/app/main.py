@@ -2,6 +2,7 @@
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
+from typing import Awaitable, Callable
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -16,10 +17,10 @@ from backend.app.core.redis import get_redis
 try:
     from prometheus_client import CONTENT_TYPE_LATEST, CollectorRegistry, Counter, generate_latest
 except Exception:  # pragma: no cover
-    CONTENT_TYPE_LATEST = "text/plain; version=0.0.4; charset=utf-8"  # type: ignore
-    CollectorRegistry = None  # type: ignore
-    Counter = None  # type: ignore
-    def generate_latest(_: object | None = None) -> bytes:  # type: ignore
+    CONTENT_TYPE_LATEST = "text/plain; version=0.0.4; charset=utf-8"
+    CollectorRegistry = None
+    Counter = None
+    def generate_latest(_: object | None = None) -> bytes:
         return b""
 
 settings = get_settings()
@@ -65,7 +66,7 @@ app.add_middleware(
 
 
 @app.middleware("http")
-async def security_headers(request: Request, call_next):
+async def security_headers(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     """Ajoute des en-têtes de sécurité par défaut.
 
     Remarque: HSTS est pertinent uniquement derrière HTTPS (activable via settings.security_hsts).
@@ -100,9 +101,10 @@ def _rate_tick(key: str, limit: int) -> bool:
         r = get_redis()
         bucket_key = f"rl:{key}:{minute_bucket}"
         current = r.incr(bucket_key)
-        if current == 1:
+        current_i = int(current)
+        if current_i == 1:
             r.expire(bucket_key, 65)
-        return current > limit
+        return current_i > limit
     except Exception:
         prev_bucket, count = _mem_counts.get(key, (minute_bucket, 0))
         if prev_bucket != minute_bucket:
@@ -114,7 +116,7 @@ def _rate_tick(key: str, limit: int) -> bool:
 
 
 @app.middleware("http")
-async def rate_limit_middleware(request: Request, call_next):
+async def rate_limit_middleware(request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
     """Applique un rate limit global par IP+path, avec seuils différents pour /auth/*.
 
     Exclusions: /health*, /openapi, docs statiques.
@@ -167,7 +169,7 @@ async def health_db() -> dict[str, object]:
     return {"status": status, "database": db_ok, "redis": redis_ok}
 
 @app.get("/metrics")
-async def metrics():
+async def metrics() -> Response:
     if not settings.enable_metrics:
         return Response(status_code=404, content="metrics disabled")
     data = generate_latest(None)

@@ -32,23 +32,34 @@ else:
 
 # Slow query logging (dev): log > 0.5s
 try:
+    from typing import Any
     from loguru import logger
 
     @event.listens_for(engine, "after_cursor_execute")
-    def _log_slow_queries(conn, cursor, statement, parameters, context, executemany):  # type: ignore[no-untyped-def]
-        total = context._query_end_time - context._query_start_time if hasattr(context, "_query_end_time") else None
+    def _log_slow_queries(
+        conn: Any, cursor: Any, statement: str, parameters: Any, context: Any, executemany: bool
+    ) -> None:
+        total = (
+            context._query_end_time - context._query_start_time  # type: ignore[attr-defined]
+            if hasattr(context, "_query_end_time") and hasattr(context, "_query_start_time")
+            else None
+        )
         if total and total * 1000 > settings.slow_query_ms:
             logger.warning(f"Slow query {total*1000:.1f}ms: {statement}")
 
     @event.listens_for(engine, "before_cursor_execute")
-    def _before_cursor_execute(conn, cursor, statement, parameters, context, executemany):  # type: ignore[no-untyped-def]
+    def _before_cursor_execute(
+        conn: Any, cursor: Any, statement: str, parameters: Any, context: Any, executemany: bool
+    ) -> None:
         import time
-        context._query_start_time = time.time()
+        context._query_start_time = time.time()  # type: ignore[attr-defined]
 
     @event.listens_for(engine, "after_cursor_execute")
-    def _after_cursor_execute(conn, cursor, statement, parameters, context, executemany):  # type: ignore[no-untyped-def]
+    def _after_cursor_execute(
+        conn: Any, cursor: Any, statement: str, parameters: Any, context: Any, executemany: bool
+    ) -> None:
         import time
-        context._query_end_time = time.time()
+        context._query_end_time = time.time()  # type: ignore[attr-defined]
 except Exception:
     pass
 

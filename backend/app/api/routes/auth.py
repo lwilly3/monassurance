@@ -50,40 +50,42 @@ def login(request: Request, payload: UserLogin, db: Session = Depends(get_db)) -
     settings = get_settings()
     # Throttle tentatives: IP et compte (email)
     if settings.login_attempts_enabled:
-        ip = (request.client.host if request and request.client else "unknown").replace(":", "_")
+        ip_key = (request.client.host if request and request.client else "unknown").replace(":", "_")
         email_key = (payload.email or "").lower()
         ip_limit = settings.login_attempts_ip_per_minute
         acct_limit = settings.login_attempts_account_per_minute
         import time
         minute_bucket = int(time.time()) // 60
+        # Mémoire locale pour le fallback en cas d'absence de Redis
+        mem: dict[str, tuple[int, int]] = {}
+
         def inc(key: str, limit: int) -> bool:
             try:
                 r = get_redis()
                 k = f"la:{key}:{minute_bucket}"
                 cur = r.incr(k)
-                if cur == 1:
+                cur_i = int(cur)
+                if cur_i == 1:
                     r.expire(k, 65)
-                return cur > limit
+                return cur_i > limit
             except Exception:
                 # fallback mémoire local à la fonction (variable statique)
-                if not hasattr(inc, "mem"):
-                    inc.mem = {}
-                prev, cnt = inc.mem.get(key, (minute_bucket, 0))
+                prev, cnt = mem.get(key, (minute_bucket, 0))
                 if prev != minute_bucket:
                     cnt = 0
                     prev = minute_bucket
                 cnt += 1
-                inc.mem[key] = (prev, cnt)
+                mem[key] = (prev, cnt)
                 return cnt > limit
-        if inc(f"ip:{ip}", ip_limit) or inc(f"acct:{email_key}", acct_limit):
+        if inc(f"ip:{ip_key}", ip_limit) or inc(f"acct:{email_key}", acct_limit):
             raise HTTPException(status_code=429, detail="Trop de tentatives de connexion – réessayez plus tard")
     user = db.query(models.User).filter(models.User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Identifiants invalides")
     access = create_access_token(subject=user.email)
     ua = request.headers.get("user-agent") if request else None
-    ip = request.client.host if request and request.client else None
-    refresh = create_refresh_token(subject=user.email, db=db, device_label="login", ip_address=ip, user_agent=ua)
+    client_ip = request.client.host if request and request.client else None
+    refresh = create_refresh_token(subject=user.email, db=db, device_label="login", ip_address=client_ip, user_agent=ua)
     return Token(access_token=access, refresh_token=refresh)
 
 @router.post("/refresh", response_model=Token)
@@ -93,8 +95,8 @@ def refresh_token(request: Request, payload: RefreshRequest, db: Session = Depen
         raise HTTPException(status_code=401, detail="Refresh token invalide")
     access = create_access_token(subject=subject)
     ua = request.headers.get("user-agent") if request else None
-    ip = request.client.host if request and request.client else None
-    new_refresh = create_refresh_token(subject=subject, db=db, device_label="refresh", ip_address=ip, user_agent=ua)
+    client_ip = request.client.host if request and request.client else None
+    new_refresh = create_refresh_token(subject=subject, db=db, device_label="refresh", ip_address=client_ip, user_agent=ua)
     return Token(access_token=access, refresh_token=new_refresh)
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, response_class=Response)
