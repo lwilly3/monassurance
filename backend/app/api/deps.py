@@ -6,6 +6,7 @@ Expose helpers:
  - require_role: fabrique un dépendance de contrôle de rôle
 """
 from collections.abc import Callable
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
