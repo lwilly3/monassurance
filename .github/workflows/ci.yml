@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   build-test:
@@ -57,10 +58,10 @@ jobs:
           files: ./coverage.xml
           flags: backend
           name: monassurance
-          fail_ci_if_error: true
+          slug: lwilly3/monassurance
+          use_oidc: true
+          fail_ci_if_error: false
           verbose: true
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Upload coverage (artifact)
         if: always()
