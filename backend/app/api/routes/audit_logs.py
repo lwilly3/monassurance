@@ -21,7 +21,8 @@ from backend.app.db import models
 from backend.app.db.models.user import User, UserRole
 from backend.app.schemas.audit_log import AuditLogList
 
-router = APIRouter(prefix="/audit-logs", tags=["audit"])
+router = APIRouter(prefix="/audit-logs",
+                    tags=["audit"])
 
 
 def _require_manager(user: User) -> None:
