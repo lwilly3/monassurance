@@ -12,7 +12,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = '20250811_0002_storage_config'
-down_revision: Union[str, None] = '20250809_0101_pg_defaults'
+down_revision: Union[str, None] = '00abc2af9006'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
