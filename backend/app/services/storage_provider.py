@@ -10,22 +10,38 @@ from typing import Protocol
 from sqlalchemy.orm import Session
 
 from backend.app.db import models
-from backend.app.services import template_storage
 from backend.app.services.gdrive_backend import GoogleDriveStorageBackend
+from backend.app.services.template_storage import (
+    read_template_text_from_file,
+    store_template_bytes,
+)
 
 
 class StorageBackend(Protocol):
-    def store_bytes(self, data: bytes, filename: str | None = None, content_type: str | None = None) -> str: ...
-    def read_text(self, path: str) -> str: ...
+    def store_bytes(
+        self,
+        data: bytes,
+        filename: str | None = None,
+        content_type: str | None = None,
+    ) -> str:
+        ...
+
+    def read_text(self, path: str) -> str:
+        ...
 
 
 @dataclass
 class LocalStorageBackend:
-    def store_bytes(self, data: bytes, filename: str | None = None, content_type: str | None = None) -> str:
-        return template_storage.store_template_bytes(data, filename=filename, content_type=content_type)
+    def store_bytes(
+        self,
+        data: bytes,
+        filename: str | None = None,
+        content_type: str | None = None,
+    ) -> str:
+        return store_template_bytes(data, filename=filename, content_type=content_type)
 
     def read_text(self, path: str) -> str:
-        return template_storage.read_template_text_from_file(path)
+        return read_template_text_from_file(path)
 
 
 def _make_backend(cfg: models.StorageConfig) -> StorageBackend:
