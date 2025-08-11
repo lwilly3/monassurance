@@ -19,7 +19,7 @@ coverage.xml
 htmlcov/
 
 # Local SQLite DB
-monassurance.db
+# monassurance.db
 
 # Generated runtime artifacts
 /generated/
