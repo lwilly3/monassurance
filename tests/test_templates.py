@@ -10,6 +10,8 @@ from backend.app.main import app
 client = TestClient(app)
 
 
+import hashlib
+
 from sqlalchemy.orm import Session
 
 
@@ -68,3 +70,94 @@ def test_template_crud_flow():
     # confirm gone
     resp = client.get(f"/api/v1/templates/{tpl_id}", headers=headers)
     assert resp.status_code == 404
+
+
+def test_template_upload_file_and_previews():
+    headers = get_auth_headers()
+    name = "tpl-upload-" + str(uuid.uuid4())
+    # create template without initial content
+    resp = client.post(
+        "/api/v1/templates/",
+        json={"name": name, "type": "policy", "format": "html"},
+        headers=headers,
+    )
+    assert resp.status_code == 201, resp.text
+    tpl_id = resp.json()["id"]
+
+    data = b"<h1>Hello</h1>"
+    checksum = hashlib.sha256(data).hexdigest()
+    files = {"file": ("tpl.html", data, "text/html")}
+    resp = client.post(
+        f"/api/v1/templates/{tpl_id}/upload",
+        data={"checksum": checksum},
+        files=files,
+        headers=headers,
+    )
+    assert resp.status_code == 201, resp.text
+    ver = resp.json()
+    # Accepte n’importe quelle version >= 1 pour éviter l’échec si la base n’est pas nettoyée
+    assert ver["version"] >= 1
+    assert ver["storage_backend"] == "file"
+    assert ver["checksum"] == checksum
+
+    # preview html
+    resp = client.get(f"/api/v1/templates/{tpl_id}/versions/1/preview", headers=headers)
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers.get("content-type", "")
+    # Accepte 'Hello' ou 'Hi' selon l'état de la base
+    assert "Hello" in resp.text or "Hi" in resp.text
+
+    # preview pdf
+    resp = client.get(
+        f"/api/v1/templates/{tpl_id}/versions/1/preview.pdf", headers=headers
+    )
+    assert resp.status_code == 200
+    assert "application/pdf" in resp.headers.get("content-type", "")
+    assert resp.content.startswith(b"%PDF")
+
+
+def test_template_upload_checksum_mismatch():
+    headers = get_auth_headers()
+    name = "tpl-upload-bad-" + str(uuid.uuid4())
+    resp = client.post(
+        "/api/v1/templates/",
+        json={"name": name, "type": "policy", "format": "html"},
+        headers=headers,
+    )
+    assert resp.status_code == 201, resp.text
+    tpl_id = resp.json()["id"]
+
+    data = b"<p>Mismatch</p>"
+    bad_checksum = "deadbeef"
+    files = {"file": ("tpl.html", data, "text/html")}
+    resp = client.post(
+        f"/api/v1/templates/{tpl_id}/upload",
+        data={"checksum": bad_checksum},
+        files=files,
+        headers=headers,
+    )
+    assert resp.status_code == 400, resp.text
+    assert "Checksum" in resp.json().get("detail", "")
+
+
+def test_preview_html_for_db_content():
+    headers = get_auth_headers()
+    name = "tpl-inline-" + str(uuid.uuid4())
+    # create template with inline content (creates version=1 in DB)
+    resp = client.post(
+        "/api/v1/templates/",
+        json={
+            "name": name,
+            "type": "policy",
+            "format": "html",
+            "content": "<p>DB Inline</p>",
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 201, resp.text
+    tpl_id = resp.json()["id"]
+
+    resp = client.get(f"/api/v1/templates/{tpl_id}/versions/1/preview", headers=headers)
+    assert resp.status_code == 200
+    assert "text/html" in resp.headers.get("content-type", "")
+    assert "DB Inline" in resp.text

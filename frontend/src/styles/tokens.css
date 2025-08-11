@@ -1,0 +1,31 @@
+/* Design tokens: couleurs, typographies, rayons, spacing */
+:root {
+  /* Couleurs principales (contraste AA) */
+  --color-primary: #0f172a; /* slate-900 */
+  --color-primary-contrast: #ffffff;
+  --color-accent: #2563eb; /* blue-600 */
+  --color-accent-contrast: #ffffff;
+  --color-danger: #dc2626; /* red-600 */
+  --color-danger-contrast: #ffffff;
+  --color-bg: #ffffff;
+  --color-fg: #0a0a0a;
+  --color-muted: #6b7280; /* gray-500 */
+  --ring: 2px solid #2563eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0a0a0a;
+    --color-fg: #ededed;
+  }
+}
+
+/* Motion reduction */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

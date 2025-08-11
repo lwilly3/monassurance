@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import * as React from "react";
+import * as Toast from "@radix-ui/react-toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,10 +26,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <Toast.Provider swipeDirection="right">
+          {children}
+          <Toast.Viewport className="fixed bottom-2 right-2 z-50 flex w-96 flex-col gap-2 outline-none" />
+        </Toast.Provider>
       </body>
     </html>
   );

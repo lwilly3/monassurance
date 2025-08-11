@@ -46,3 +46,6 @@ class TemplateVersionRead(TemplateVersionBase):
 
 class TemplateWithVersions(TemplateRead):
     versions: list[TemplateVersionRead] = []
+
+# Note: la prévisualisation renvoie pour l'instant une HTMLResponse directe via route
+# Si besoin d'une API JSON à l'avenir, on pourra définir un schéma Preview ici.

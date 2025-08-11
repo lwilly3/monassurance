@@ -10,7 +10,9 @@ Règles:
 from hashlib import sha256
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
+from fastapi.responses import HTMLResponse
+from fastapi.responses import Response as FastAPIResponse
 from sqlalchemy.orm import Session
 
 from backend.app.api.deps import get_current_user, get_db
@@ -24,6 +26,9 @@ from backend.app.schemas.template import (
     TemplateVersionRead,
     TemplateWithVersions,
 )
+from backend.app.services.document_renderer import render_template
+from backend.app.services.storage_provider import get_storage
+from backend.app.services.template_storage import sha256_hex
 
 router = APIRouter(prefix="/templates", tags=["templates"])
 
@@ -136,3 +141,105 @@ def delete_template(template_id: int, db: Session = Depends(get_db), current_use
     db.delete(tpl)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post("/{template_id}/upload", response_model=TemplateVersionRead, status_code=status.HTTP_201_CREATED)
+def upload_template_file(
+    template_id: int,
+    file: UploadFile = File(...),
+    checksum: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> models.TemplateVersion:
+    """Upload binaire sécurisé d'un template. Stocke sur disque et crée une nouvelle version.
+
+    Si un checksum (sha256 hex) est fourni, il est validé côté serveur.
+    """
+    ensure_admin_or_manager(current_user)
+    tpl = db.query(models.Template).filter(models.Template.id == template_id).first()
+    if not tpl:
+        raise HTTPException(status_code=404, detail="Template not found")
+    data = file.file.read()
+    if checksum:
+        calc = sha256_hex(data)
+        if calc != checksum:
+            raise HTTPException(status_code=400, detail="Checksum mismatch")
+    storage = get_storage(db)
+    stored_path = storage.store_bytes(data, filename=file.filename, content_type=file.content_type)
+    last_version = db.query(models.TemplateVersion).filter(models.TemplateVersion.template_id == template_id).order_by(models.TemplateVersion.version.desc()).first()
+    new_version_number = 1 if not last_version else last_version.version + 1
+    version = models.TemplateVersion(
+        template_id=template_id,
+        version=new_version_number,
+        storage_backend="file",
+        content=None,
+        file_path=stored_path,
+        checksum=sha256_hex(data),
+    )
+    db.add(version)
+    db.commit()
+    db.refresh(version)
+    return version
+
+
+@router.get("/{template_id}/versions/{version}/preview", response_class=HTMLResponse)
+def preview_template(
+    template_id: int,
+    version: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> HTMLResponse:
+    """Prévisualise une version de template en HTML.
+
+    - Si le template est stocké en base (content), on le rend tel quel avec un contexte neutre.
+    - Si stocké fichier, on lit le fichier et on renvoie le rendu HTML.
+    """
+    ensure_admin_or_manager(current_user)
+    ver = db.query(models.TemplateVersion).filter(models.TemplateVersion.template_id == template_id, models.TemplateVersion.version == version).first()
+    if not ver:
+        raise HTTPException(status_code=404, detail="Version not found")
+    # Détermine le contenu brut
+    if ver.content:
+        raw = ver.content
+    elif ver.file_path:
+        try:
+            storage = get_storage(db)
+            raw = storage.read_text(ver.file_path)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Fichier de template illisible")
+    else:
+        raise HTTPException(status_code=400, detail="Aucun contenu")
+    # Construit un mini contexte
+    ctx = {"inline_context": {"example": "Aperçu"}}
+    html_bytes = render_template(raw, ctx, "html")
+    return HTMLResponse(content=html_bytes.decode("utf-8"))
+
+
+@router.get("/{template_id}/versions/{version}/preview.pdf")
+def preview_template_pdf(
+    template_id: int,
+    version: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> FastAPIResponse:
+    """Prévisualise une version de template en PDF.
+
+    Lit le contenu (DB ou fichier), puis rend en PDF via le moteur existant.
+    """
+    ensure_admin_or_manager(current_user)
+    ver = db.query(models.TemplateVersion).filter(models.TemplateVersion.template_id == template_id, models.TemplateVersion.version == version).first()
+    if not ver:
+        raise HTTPException(status_code=404, detail="Version not found")
+    if ver.content:
+        raw = ver.content
+    elif ver.file_path:
+        try:
+            storage = get_storage(db)
+            raw = storage.read_text(ver.file_path)
+        except Exception:
+            raise HTTPException(status_code=400, detail="Fichier de template illisible")
+    else:
+        raise HTTPException(status_code=400, detail="Aucun contenu")
+    ctx = {"inline_context": {"example": "Aperçu"}}
+    pdf_bytes = render_template(raw, ctx, "pdf")
+    return FastAPIResponse(content=pdf_bytes, media_type="application/pdf")

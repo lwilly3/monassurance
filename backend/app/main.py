@@ -7,7 +7,16 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
-from backend.app.api.routes import audit_logs, auth, clients, companies, documents, policies, templates
+from backend.app.api.routes import (
+    admin_storage,
+    audit_logs,
+    auth,
+    clients,
+    companies,
+    documents,
+    policies,
+    templates,
+)
 from backend.app.core.config import get_settings
 from backend.app.core.errors import validation_exception_handler
 from backend.app.core.logging import ExceptionHandlingMiddleware, RequestLoggerMiddleware
@@ -137,6 +146,7 @@ app.include_router(companies.router, prefix="/api/v1")
 app.include_router(policies.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/api/v1")
 app.include_router(templates.router, prefix="/api/v1")
+app.include_router(admin_storage.router, prefix="/api/v1")
 app.include_router(audit_logs.router, prefix="/api/v1")
 
 app.add_exception_handler(RequestValidationError, validation_exception_handler)

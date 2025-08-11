@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Monassurance – Frontend (Next.js + TypeScript)
 
-## Getting Started
+Frontend de l’application Monassurance, basé sur Next.js (App Router) et TypeScript.
 
-First, run the development server:
+### Prérequis
+- Node.js 18.x (ou supérieur compatible)
 
+### Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd frontend
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Démarrage (dev)
+```bash
+npm run dev
+# http://localhost:3000
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build (prod)
+```bash
+npm run build
+npm run start
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Lint
+```bash
+npm run lint
+```
 
-## Learn More
+### Types OpenAPI
+Génère `src/lib/api.types.ts` à partir de l’OpenAPI du backend:
+```bash
+# Assurez-vous que le backend FastAPI tourne (ex: 127.0.0.1:8000)
+BACKEND_URL=http://127.0.0.1:8000 npm run gen:api
+```
+Le script utilise 127.0.0.1:8000 par défaut si `BACKEND_URL` n’est pas fourni.
 
-To learn more about Next.js, take a look at the following resources:
+### Variables d’environnement
+- `NEXT_PUBLIC_API_BASE` (ex: http://127.0.0.1:8000)
+	- Copiez `.env.example` vers `.env.local` et adaptez si besoin.
+	- Doit pointer vers l’API backend exposant `/api/v1`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Optionnel pour la génération des types:
+- `BACKEND_URL` (par défaut http://127.0.0.1:8000)
+	- Utilisé par `npm run gen:api` si vous souhaitez surcharger la cible.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Auth – résumé
+- Le refresh token est stocké en cookie httpOnly (via routes API Next).
+- L’access token est gardé côté client en mémoire (et rafraîchi automatiquement sur 401).
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Plus de détails: voir `ARCHITECTURE.md`.
