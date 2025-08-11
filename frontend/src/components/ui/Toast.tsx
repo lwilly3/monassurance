@@ -29,7 +29,11 @@ export function Toast({ title, description, actionText, onAction, open, onOpenCh
           )}
           {actionText && (
             <ToastPrimitive.Action altText={actionText} asChild>
-              <Button variant="ghost" className="mt-2 border border-white/20">
+              <Button
+                variant="ghost"
+                className="mt-2 border border-white/20"
+                onClick={() => onAction?.()}
+              >
                 {actionText}
               </Button>
             </ToastPrimitive.Action>

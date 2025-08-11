@@ -31,7 +31,7 @@ const variants: Record<ButtonVariant, string> = {
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ asChild, className = "", variant = "primary", size = "md", ...props }, ref) => {
-    const Comp = asChild ? (Slot as any) : "button";
+  const Comp: React.ElementType = asChild ? Slot : "button";
     return (
       <Comp
         ref={ref}

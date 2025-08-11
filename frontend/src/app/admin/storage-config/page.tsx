@@ -27,8 +27,9 @@ export default function StorageConfigPage() {
       });
       if (!res.ok) throw new Error(await res.text());
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erreur inconnue";
+      setError(msg);
     } finally {
       setLoading(false);
     }
