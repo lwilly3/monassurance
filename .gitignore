@@ -1,0 +1,41 @@
+# Root ignore
+
+# OS / editor
+.DS_Store
+*.swp
+*.swo
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual env
+.venv/
+
+# Coverage & reports
+.coverage*
+coverage.xml
+htmlcov/
+
+# Local SQLite DB
+monassurance.db
+
+# Generated runtime artifacts
+/generated/
+/templates_store/
+
+# Alembic build noise
+alembic/versions/__pycache__/
+alembic/.DS_Store
+alembic/versions/.DS_Store
+
+# Node modules (if any at root)
+node_modules/
+
+# Logs
+*.log
+
+# Misc
+*.bak
+*.tmp
