@@ -438,6 +438,91 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/templates/{template_id}/upload": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Template File
+         * @description Upload binaire sécurisé d'un template. Stocke sur disque et crée une nouvelle version.
+         *
+         *     Si un checksum (sha256 hex) est fourni, il est validé côté serveur.
+         */
+        post: operations["upload_template_file_api_v1_templates__template_id__upload_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/templates/{template_id}/versions/{version}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview Template
+         * @description Prévisualise une version de template en HTML.
+         *
+         *     - Si le template est stocké en base (content), on le rend tel quel avec un contexte neutre.
+         *     - Si stocké fichier, on lit le fichier et on renvoie le rendu HTML.
+         */
+        get: operations["preview_template_api_v1_templates__template_id__versions__version__preview_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/templates/{template_id}/versions/{version}/preview.pdf": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview Template Pdf
+         * @description Prévisualise une version de template en PDF.
+         *
+         *     Lit le contenu (DB ou fichier), puis rend en PDF via le moteur existant.
+         */
+        get: operations["preview_template_pdf_api_v1_templates__template_id__versions__version__preview_pdf_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/storage-config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Storage Config */
+        get: operations["get_storage_config_api_v1_admin_storage_config_get"];
+        /** Update Storage Config */
+        put: operations["update_storage_config_api_v1_admin_storage_config_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/audit-logs/": {
         parameters: {
             query?: never;
@@ -586,6 +671,16 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** Body_upload_template_file_api_v1_templates__template_id__upload_post */
+        Body_upload_template_file_api_v1_templates__template_id__upload_post: {
+            /**
+             * File
+             * Format: binary
+             */
+            file: string;
+            /** Checksum */
+            checksum?: string | null;
         };
         /** ClientCreate */
         ClientCreate: {
@@ -831,6 +926,37 @@ export interface components {
         RefreshRequest: {
             /** Refresh Token */
             refresh_token: string;
+        };
+        /** StorageConfigRead */
+        StorageConfigRead: {
+            /** Id */
+            id: number;
+            /**
+             * Backend
+             * @enum {string}
+             */
+            backend: "local" | "google_drive";
+            /** Gdrive Folder Id */
+            gdrive_folder_id?: string | null;
+            /** Gdrive Service Account Json Path */
+            gdrive_service_account_json_path?: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** StorageConfigUpdate */
+        StorageConfigUpdate: {
+            /**
+             * Backend
+             * @enum {string}
+             */
+            backend: "local" | "google_drive";
+            /** Gdrive Folder Id */
+            gdrive_folder_id?: string | null;
+            /** Gdrive Service Account Json Path */
+            gdrive_service_account_json_path?: string | null;
         };
         /** TemplateCreate */
         TemplateCreate: {
@@ -2120,6 +2246,158 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TemplateVersionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_template_file_api_v1_templates__template_id__upload_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_template_file_api_v1_templates__template_id__upload_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateVersionRead"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_template_api_v1_templates__template_id__versions__version__preview_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: number;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/html": string;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_template_pdf_api_v1_templates__template_id__versions__version__preview_pdf_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                template_id: number;
+                version: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_storage_config_api_v1_admin_storage_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageConfigRead"];
+                };
+            };
+        };
+    };
+    update_storage_config_api_v1_admin_storage_config_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StorageConfigUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StorageConfigRead"];
                 };
             };
             /** @description Validation Error */
