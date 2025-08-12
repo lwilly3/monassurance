@@ -35,6 +35,39 @@ Ce document décrit l’architecture, les conventions et les flux d’authentifi
 4. Logout
    - `POST /api/auth/logout` (via route API Next) révoque le refresh token côté backend et supprime le cookie
 
+### Bypass Auth pour tests E2E
+
+Pour les tests Playwright isolant des pages (ex: admin storage-config) sans gérer un vrai flux de connexion, le middleware détecte `process.env.NEXT_PUBLIC_DISABLE_AUTH === '1'` et saute la vérification du cookie `refresh_token`.
+
+- Activation: variable d’environnement dans la config `webServer` Playwright.
+- Impact: uniquement côté test; ne pas activer en production/staging.
+- Avantage: simplifie les tests UI purs (mock API) et réduit la flakiness liée à l’auth.
+
+## Page Admin – Configuration Stockage
+
+Chemin: `/admin/storage-config`.
+
+Objectif: ajuster dynamiquement le backend de stockage documents (local vs Google Drive).
+
+Implémentation:
+- Client component `page.tsx` (directive "use client").
+- Hook `useStorageConfig` gère: état, chargement initial (GET), validation minimale, sauvegarde (PUT), drapeaux `loading` / `saving` / `success` / `error`.
+- Champs conditionnels: visibles uniquement si backend = google_drive.
+- Feedback: toast (Radix), messages inline, overlay lors du `saving`.
+- I18n embarqué minimal (`fr`/`en`) via dictionnaire local.
+- Accessibilité: labels explicites, rôles `alert` / `status`, overlay `aria-busy`.
+- Sélecteurs tests: `data-testid="storage-config-*"`.
+
+Tests:
+- Playwright `tests-e2e/storage-config.spec.ts` mocke GET & PUT `**/api/v1/admin/storage-config`.
+- Scénarios couverts: affichage page + mise à jour Google Drive.
+- Instrumentation temporaire (logs console / réponses) pour diagnostiquer les échecs initiaux.
+
+Évolutions possibles:
+- Optimistic update (mettre à jour l’UI avant réponse) avec rollback si échec.
+- Extraction dictionnaire i18n globale.
+- Ajout test d’erreur serveur (PUT renvoie 500) pour vérifier le toast erreur.
+
 ## Configuration
 - `.env.local` recommandé côté frontend:
   - `NEXT_PUBLIC_API_BASE=http://127.0.0.1:8000`

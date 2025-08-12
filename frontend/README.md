@@ -50,3 +50,27 @@ Optionnel pour la génération des types:
 - L’access token est gardé côté client en mémoire (et rafraîchi automatiquement sur 401).
 
 Plus de détails: voir `ARCHITECTURE.md`.
+
+### Administration – Configuration stockage
+
+Page `/admin/storage-config` permettant de choisir le backend de stockage (local ou Google Drive) et, pour Google Drive, de renseigner:
+- ID du dossier (`gdrive_folder_id`)
+- Chemin fichier JSON Service Account (`gdrive_service_account_json_path`)
+
+Logique factorisée dans `src/hooks/useStorageConfig.ts`. Feedback via toast (Radix) + messages inline.
+
+### Tests E2E (Playwright)
+
+Installation (dev dep déjà ajoutée):
+```bash
+npm run test:e2e
+```
+Configuration clé (`playwright.config.ts`):
+- Lance un build + start avec `NEXT_PUBLIC_DISABLE_AUTH=1` pour bypass le middleware d’auth (uniquement tests).
+- Tests dans `tests-e2e/`.
+
+Test existant: `storage-config.spec.ts` (affichage + mise à jour config) – mock des endpoints `GET/PUT /api/v1/admin/storage-config`.
+
+Ajouts futurs suggérés:
+- Cas d’erreur serveur (PUT 500) => toast erreur.
+- Nettoyage instrumentation console une fois stable.

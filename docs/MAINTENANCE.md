@@ -104,3 +104,41 @@ Procédure Postgres (dev/staging):
 - Docker Compose: `docker compose up -d` (DB + backend).
 - Tests: `pytest -q`.
 - Lint: `ruff check .`; Types: `mypy --config-file mypy.ini .`.
+
+## 10) Administration – Configuration stockage (Frontend + Backend)
+
+Objectif: Permettre à un administrateur de définir dynamiquement le backend de stockage des documents (local ou Google Drive) via l'UI.
+
+Backend:
+- Endpoint lecture: `GET /api/v1/admin/storage-config` (retourne backend courant + éventuels paramètres GDrive).
+- Endpoint mise à jour: `PUT /api/v1/admin/storage-config` (valide et persiste la configuration).
+- Types exposés dans l'OpenAPI: `StorageConfigRead`, `StorageConfigUpdate`.
+- Validation serveur: si `backend=google_drive`, nécessite `gdrive_folder_id` et `gdrive_service_account_json_path` non vides.
+
+Frontend:
+- Page: `frontend/src/app/admin/storage-config/page.tsx` (client component).
+- Logique métier isolée dans le hook `frontend/src/hooks/useStorageConfig.ts` (chargement initial, validation basique, PUT, état succès/erreur, auto-reset succès après 4s).
+- Accessibilité: libellés associés, feedback rôle `alert` / `status`, overlay de chargement avec `aria-busy`.
+- I18n minimal embarqué (fr/en) – à externaliser ultérieurement.
+- Toast (Radix) pour feedback de sauvegarde.
+- Champs masqués: GDrive uniquement si backend sélectionné = google_drive.
+
+Tests E2E (Playwright):
+- Fichier: `frontend/tests-e2e/storage-config.spec.ts`.
+- Mock réseau sur `**/api/v1/admin/storage-config` pour isoler l'UI du backend pendant les tests UI.
+- Scénarios:
+  1. Affichage de la page (GET mock) + présence des éléments principaux.
+  2. Mise à jour (sélection Google Drive, saisie des champs, PUT mock) + assertion sur payload.
+- Sélecteurs robustes: attributs `data-testid` (`storage-config-*`).
+- Instrumentation (logs console/réponses) encore présente pour diagnostic – peut être allégée quand la stabilité est confirmée.
+
+Bypass Auth pour tests:
+- Middleware `frontend/src/middleware.ts` court-circuite la redirection login si la variable `NEXT_PUBLIC_DISABLE_AUTH=1` est définie (utilisée dans la config Playwright `webServer.env`).
+- Permet d'éviter d'orchestrer un vrai flux d'auth dans les tests de pages admin isolées.
+
+Améliorations futures suggérées:
+- Optimistic update avec rollback visuel si échec.
+- Test e2e scénario d'erreur serveur (PUT 500).
+- Externalisation dictionnaire i18n + sélection langue dynamique.
+- Suppression instrumentation verbose une fois CI fiable.
+

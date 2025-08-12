@@ -2,6 +2,24 @@
 
 Toutes les modifications notables de ce projet sont documentées ici.
 
+## 2025-08-12
+
+### Ajouté
+- Frontend: page d’administration `/admin/storage-config` (sélection backend `local` ou `google_drive`, champs conditionnels Google Drive, toast de feedback, overlay de chargement, i18n minimal fr/en).
+- Hook `useStorageConfig` centralisant chargement initial (GET), validation minimale et sauvegarde (PUT) de la configuration de stockage.
+- Tests E2E (Playwright) `storage-config.spec.ts` avec mocks réseau (GET/PUT) vérifiant affichage et mise à jour (payload PUT asserté).
+- Attributs `data-testid` pour robustesse des sélecteurs tests (`storage-config-*`).
+- Bypass middleware d’auth pour tests via variable `NEXT_PUBLIC_DISABLE_AUTH=1` (documenté dans `ARCHITECTURE.md`).
+- Documentation mise à jour: sections dédiées dans `docs/MAINTENANCE.md`, `frontend/ARCHITECTURE.md` et `frontend/README.md`.
+
+### Modifié
+- `frontend/src/middleware.ts`: ajout court-circuit authentification si `NEXT_PUBLIC_DISABLE_AUTH=1` (usage test uniquement).
+- Légères améliorations d’accessibilité sur la page (rôles `alert` / `status`, aria-busy overlay).
+
+### Notes
+- Instrumentation console/response dans le test E2E conservée pour stabilisation initiale; pourra être épurée ultérieurement.
+- Prochaines optimisations identifiées: optimistic update avec rollback, test d’erreur serveur PUT, externalisation i18n.
+
 ## 2025-08-09
 
 ### Ajouté
