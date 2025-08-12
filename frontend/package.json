@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
   "type-check": "tsc --noEmit",
-    "gen:api": "openapi-typescript ${BACKEND_URL:-http://127.0.0.1:8000}/api/v1/openapi.json -o src/lib/api.types.ts"
+  "type-check:e2e": "tsc -p tsconfig.e2e.json --noEmit",
+    "gen:api": "openapi-typescript ${BACKEND_URL:-http://127.0.0.1:8000}/api/v1/openapi.json -o src/lib/api.types.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.5",
@@ -20,6 +22,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.54.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
