@@ -16,10 +16,12 @@ export default function StorageConfigPage() {
   const [backend, setBackend] = useState<BackendKind>("local");
   const [gdriveFolderId, setGdriveFolderId] = useState("");
   const [gdriveJsonPath, setGdriveJsonPath] = useState("");
+  const [showJsonPath, setShowJsonPath] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{ folder?: string; json?: string }>({});
 
   // Chargement initial de la configuration existante
   useEffect(() => {
@@ -47,6 +49,19 @@ export default function StorageConfigPage() {
     setLoading(true);
     setError(null);
     setSuccess(false);
+    setValidationErrors({});
+
+    // Validation UI
+    if (backend === "google_drive") {
+      const vErr: { folder?: string; json?: string } = {};
+      if (!gdriveFolderId.trim()) vErr.folder = "Dossier requis";
+      if (!gdriveJsonPath.trim()) vErr.json = "Chemin JSON requis";
+      if (Object.keys(vErr).length) {
+        setValidationErrors(vErr);
+        setLoading(false);
+        return;
+      }
+    }
     try {
       const body: StorageConfig = {
         backend,
@@ -95,31 +110,57 @@ export default function StorageConfigPage() {
 
       {backend === "google_drive" && (
         <>
-          <Input
-            label="ID du dossier Google Drive"
-            value={gdriveFolderId}
-            onChange={e => { setGdriveFolderId(e.target.value); setSuccess(false); }}
-            required
-            disabled={loading}
-            className="mb-2"
-          />
-          <Input
-            label="Chemin du fichier Service Account JSON"
-            value={gdriveJsonPath}
-            onChange={e => { setGdriveJsonPath(e.target.value); setSuccess(false); }}
-            required
-            disabled={loading}
-            className="mb-2"
-          />
+          <div>
+            <Input
+              label="ID du dossier Google Drive"
+              value={gdriveFolderId}
+              onChange={e => { setGdriveFolderId(e.target.value); setSuccess(false); if (validationErrors.folder) setValidationErrors(v => ({ ...v, folder: undefined })); }}
+              required
+              disabled={loading}
+              className="mb-1"
+            />
+            {validationErrors.folder && <p className="text-sm text-red-600 mb-2" role="alert">{validationErrors.folder}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Chemin du fichier Service Account JSON</label>
+            <div className="flex gap-2 items-start mb-1">
+              <input
+                type={showJsonPath ? "text" : "password"}
+                value={gdriveJsonPath}
+                onChange={e => { setGdriveJsonPath(e.target.value); setSuccess(false); if (validationErrors.json) setValidationErrors(v => ({ ...v, json: undefined })); }}
+                disabled={loading}
+                className="flex-1 p-2 border rounded"
+                required
+              />
+              <Button
+                type="button"
+                onClick={() => setShowJsonPath(s => !s)}
+                disabled={loading}
+                className="bg-gray-100 text-gray-700 hover:bg-gray-200"
+              >
+                {showJsonPath ? "Masquer" : "Voir"}
+              </Button>
+            </div>
+            {validationErrors.json && <p className="text-sm text-red-600 mb-2" role="alert">{validationErrors.json}</p>}
+          </div>
         </>
       )}
 
-      <Button type="submit" disabled={loading}>
+      <Button type="submit" disabled={loading || (backend === "google_drive" && (!gdriveFolderId.trim() || !gdriveJsonPath.trim()))}>
         {loading ? "Enregistrement..." : "Enregistrer"}
       </Button>
 
       {error && <div className="text-red-600" role="alert">Erreur : {error}</div>}
       {success && <div className="text-green-600" role="status">Configuration enregistrée !</div>}
+
+      {loading && (
+        <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" aria-live="polite" aria-busy="true">
+          <div className="bg-white px-6 py-4 rounded shadow flex items-center gap-3">
+            <div className="h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            <span>Enregistrement…</span>
+          </div>
+        </div>
+      )}
     </form>
   );
 }
