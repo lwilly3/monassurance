@@ -3,14 +3,12 @@
 import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import * as Toast from "@radix-ui/react-toast";
+import type { components } from "@/lib/api.types";
 
-type BackendKind = "local" | "google_drive";
-
-interface StorageConfig {
-  backend: BackendKind;
-  gdrive_folder_id?: string | null;
-  gdrive_service_account_json_path?: string | null;
-}
+type StorageConfigRead = components["schemas"]["StorageConfigRead"];
+type StorageConfigUpdate = components["schemas"]["StorageConfigUpdate"];
+type BackendKind = StorageConfigUpdate["backend"];
 
 export default function StorageConfigPage() {
   const [backend, setBackend] = useState<BackendKind>("local");
@@ -22,6 +20,8 @@ export default function StorageConfigPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [validationErrors, setValidationErrors] = useState<{ folder?: string; json?: string }>({});
+  const [toastOpen, setToastOpen] = useState(false);
+  const [toast, setToast] = useState<{ title: string; description?: string; kind: "success" | "error" }>({ title: "", kind: "success" });
 
   // Chargement initial de la configuration existante
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function StorageConfigPage() {
       try {
         const res = await fetch("/api/v1/admin/storage-config");
         if (!res.ok) throw new Error("Lecture de la configuration impossible");
-        const data: StorageConfig = await res.json();
+  const data: StorageConfigRead = await res.json();
         if (cancelled) return;
         setBackend(data.backend);
         setGdriveFolderId(data.gdrive_folder_id || "");
@@ -63,7 +63,7 @@ export default function StorageConfigPage() {
       }
     }
     try {
-      const body: StorageConfig = {
+  const body: StorageConfigUpdate = {
         backend,
         gdrive_folder_id: backend === "google_drive" ? gdriveFolderId : null,
         gdrive_service_account_json_path: backend === "google_drive" ? gdriveJsonPath : null,
@@ -75,8 +75,13 @@ export default function StorageConfigPage() {
       });
       if (!res.ok) throw new Error(await res.text());
       setSuccess(true);
+  setToast({ title: "Configuration enregistrée", description: "Mise à jour réussie", kind: "success" });
+  setToastOpen(true);
+  setTimeout(() => setSuccess(false), 4000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur inconnue");
+  setToast({ title: "Erreur", description: err instanceof Error ? err.message : "Erreur inconnue", kind: "error" });
+  setToastOpen(true);
     } finally {
       setLoading(false);
     }
@@ -150,8 +155,8 @@ export default function StorageConfigPage() {
         {loading ? "Enregistrement..." : "Enregistrer"}
       </Button>
 
-      {error && <div className="text-red-600" role="alert">Erreur : {error}</div>}
-      {success && <div className="text-green-600" role="status">Configuration enregistrée !</div>}
+  {error && <div className="text-red-600" role="alert">Erreur : {error}</div>}
+  {success && <div className="text-green-600" role="status">Configuration enregistrée !</div>}
 
       {loading && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" aria-live="polite" aria-busy="true">
@@ -161,6 +166,16 @@ export default function StorageConfigPage() {
           </div>
         </div>
       )}
+
+      <Toast.Root
+        open={toastOpen}
+        onOpenChange={setToastOpen}
+        className={`relative rounded-md px-4 py-3 pr-10 shadow-lg text-sm font-medium ${toast.kind === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}
+      >
+        <Toast.Title className="font-semibold text-base">{toast.title}</Toast.Title>
+        {toast.description && <Toast.Description className="mt-1 opacity-90">{toast.description}</Toast.Description>}
+        <Toast.Close className="absolute right-2 top-2 text-white/80 hover:text-white" aria-label="Fermer">×</Toast.Close>
+      </Toast.Root>
     </form>
   );
 }
