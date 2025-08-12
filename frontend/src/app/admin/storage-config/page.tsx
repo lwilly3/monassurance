@@ -1,94 +1,65 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import * as Toast from "@radix-ui/react-toast";
-import type { components } from "@/lib/api.types";
-
-type StorageConfigRead = components["schemas"]["StorageConfigRead"];
-type StorageConfigUpdate = components["schemas"]["StorageConfigUpdate"];
-type BackendKind = StorageConfigUpdate["backend"];
+import { useStorageConfig, BackendKind } from "@/hooks/useStorageConfig";
 
 export default function StorageConfigPage() {
-  const [backend, setBackend] = useState<BackendKind>("local");
-  const [gdriveFolderId, setGdriveFolderId] = useState("");
-  const [gdriveJsonPath, setGdriveJsonPath] = useState("");
+  const { backend, gdriveFolderId, gdriveJsonPath, setBackend, setGdriveFolderId, setGdriveJsonPath, loading: fetching, saving: loading, error, success, save, validate, resetSuccess } = useStorageConfig();
   const [showJsonPath, setShowJsonPath] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [fetching, setFetching] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<{ folder?: string; json?: string }>({});
   const [toastOpen, setToastOpen] = useState(false);
   const [toast, setToast] = useState<{ title: string; description?: string; kind: "success" | "error" }>({ title: "", kind: "success" });
+  const [validationErrors, setValidationErrors] = useState<{ folder?: string; json?: string }>({});
+  const [lang] = useState<'fr' | 'en'>('fr');
 
-  // Chargement initial de la configuration existante
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/v1/admin/storage-config");
-        if (!res.ok) throw new Error("Lecture de la configuration impossible");
-  const data: StorageConfigRead = await res.json();
-        if (cancelled) return;
-        setBackend(data.backend);
-        setGdriveFolderId(data.gdrive_folder_id || "");
-        setGdriveJsonPath(data.gdrive_service_account_json_path || "");
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : "Erreur de chargement");
-      } finally {
-        if (!cancelled) setFetching(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, []);
+  const t = (key: string): string => {
+    const dict: Record<string, { fr: string; en: string }> = {
+      title: { fr: 'Configuration du stockage', en: 'Storage configuration' },
+      backend: { fr: 'Backend', en: 'Backend' },
+      local: { fr: 'Local', en: 'Local' },
+      gdrive: { fr: 'Google Drive', en: 'Google Drive' },
+      folderId: { fr: 'ID du dossier Google Drive', en: 'Google Drive folder ID' },
+      jsonPath: { fr: 'Chemin du fichier Service Account JSON', en: 'Service Account JSON file path' },
+      save: { fr: 'Enregistrer', en: 'Save' },
+      saving: { fr: 'Enregistrement...', en: 'Saving...' },
+      saved: { fr: 'Configuration enregistrée !', en: 'Configuration saved!' },
+      requiredFolder: { fr: 'Dossier requis', en: 'Folder required' },
+      requiredJson: { fr: 'Chemin JSON requis', en: 'JSON path required' },
+      show: { fr: 'Voir', en: 'Show' },
+      hide: { fr: 'Masquer', en: 'Hide' },
+      loading: { fr: 'Chargement…', en: 'Loading…' },
+      updatedToast: { fr: 'Configuration enregistrée', en: 'Configuration saved' },
+      updatedDesc: { fr: 'Mise à jour réussie', en: 'Update succeeded' },
+      error: { fr: 'Erreur', en: 'Error' },
+    };
+    return dict[key]?.[lang] || key;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-    setSuccess(false);
     setValidationErrors({});
-
-    // Validation UI
-    if (backend === "google_drive") {
+    if (backend === 'google_drive') {
       const vErr: { folder?: string; json?: string } = {};
-      if (!gdriveFolderId.trim()) vErr.folder = "Dossier requis";
-      if (!gdriveJsonPath.trim()) vErr.json = "Chemin JSON requis";
+      if (!gdriveFolderId.trim()) vErr.folder = t('requiredFolder');
+      if (!gdriveJsonPath.trim()) vErr.json = t('requiredJson');
       if (Object.keys(vErr).length) {
         setValidationErrors(vErr);
-        setLoading(false);
         return;
       }
     }
-    try {
-  const body: StorageConfigUpdate = {
-        backend,
-        gdrive_folder_id: backend === "google_drive" ? gdriveFolderId : null,
-        gdrive_service_account_json_path: backend === "google_drive" ? gdriveJsonPath : null,
-      };
-      const res = await fetch("/api/v1/admin/storage-config", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      setSuccess(true);
-  setToast({ title: "Configuration enregistrée", description: "Mise à jour réussie", kind: "success" });
-  setToastOpen(true);
-  setTimeout(() => setSuccess(false), 4000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Erreur inconnue");
-  setToast({ title: "Erreur", description: err instanceof Error ? err.message : "Erreur inconnue", kind: "error" });
-  setToastOpen(true);
-    } finally {
-      setLoading(false);
+    await save();
+    if (!error) {
+      setToast({ title: t('updatedToast'), description: t('updatedDesc'), kind: 'success' });
+    } else {
+      setToast({ title: t('error'), description: error, kind: 'error' });
     }
+    setToastOpen(true);
   };
 
   if (fetching) {
-    return <div className="max-w-lg mx-auto mt-8 p-6">Chargement…</div>;
+    return <div data-testid="storage-config-loading" className="max-w-lg mx-auto mt-8 p-6">{t('loading')}</div>;
   }
 
   return (
@@ -97,19 +68,20 @@ export default function StorageConfigPage() {
       onSubmit={handleSubmit}
       aria-labelledby="storage-config-title"
     >
-      <h2 id="storage-config-title" className="text-xl font-bold">Configuration du stockage</h2>
+  <h2 id="storage-config-title" data-testid="storage-config-title" className="text-xl font-bold">{t('title')}</h2>
 
       <div>
-        <label className="block mb-2 font-medium" htmlFor="backend">Backend</label>
+  <label className="block mb-2 font-medium" htmlFor="backend">{t('backend')}</label>
         <select
+          data-testid="storage-config-backend"
           id="backend"
           value={backend}
-          onChange={e => { setBackend(e.target.value as BackendKind); setSuccess(false); }}
+          onChange={e => { setBackend(e.target.value as BackendKind); resetSuccess(); }}
           className="p-2 border rounded w-full"
           disabled={loading}
         >
-          <option value="local">Local</option>
-          <option value="google_drive">Google Drive</option>
+          <option value="local">{t('local')}</option>
+          <option value="google_drive">{t('gdrive')}</option>
         </select>
       </div>
 
@@ -117,25 +89,27 @@ export default function StorageConfigPage() {
         <>
           <div>
             <Input
-              label="ID du dossier Google Drive"
+              label={t('folderId')}
               value={gdriveFolderId}
-              onChange={e => { setGdriveFolderId(e.target.value); setSuccess(false); if (validationErrors.folder) setValidationErrors(v => ({ ...v, folder: undefined })); }}
+              onChange={e => { setGdriveFolderId(e.target.value); resetSuccess(); if (validationErrors.folder) setValidationErrors(v => ({ ...v, folder: undefined })); }}
               required
               disabled={loading}
               className="mb-1"
+              data-testid="storage-config-gdrive-folder"
             />
             {validationErrors.folder && <p className="text-sm text-red-600 mb-2" role="alert">{validationErrors.folder}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Chemin du fichier Service Account JSON</label>
+            <label className="block text-sm font-medium mb-1">{t('jsonPath')}</label>
             <div className="flex gap-2 items-start mb-1">
               <input
                 type={showJsonPath ? "text" : "password"}
                 value={gdriveJsonPath}
-                onChange={e => { setGdriveJsonPath(e.target.value); setSuccess(false); if (validationErrors.json) setValidationErrors(v => ({ ...v, json: undefined })); }}
+                onChange={e => { setGdriveJsonPath(e.target.value); resetSuccess(); if (validationErrors.json) setValidationErrors(v => ({ ...v, json: undefined })); }}
                 disabled={loading}
                 className="flex-1 p-2 border rounded"
                 required
+                data-testid="storage-config-gdrive-json"
               />
               <Button
                 type="button"
@@ -143,7 +117,7 @@ export default function StorageConfigPage() {
                 disabled={loading}
                 className="bg-gray-100 text-gray-700 hover:bg-gray-200"
               >
-                {showJsonPath ? "Masquer" : "Voir"}
+                {showJsonPath ? t('hide') : t('show')}
               </Button>
             </div>
             {validationErrors.json && <p className="text-sm text-red-600 mb-2" role="alert">{validationErrors.json}</p>}
@@ -152,11 +126,11 @@ export default function StorageConfigPage() {
       )}
 
       <Button type="submit" disabled={loading || (backend === "google_drive" && (!gdriveFolderId.trim() || !gdriveJsonPath.trim()))}>
-        {loading ? "Enregistrement..." : "Enregistrer"}
+        {loading ? t('saving') : t('save')}
       </Button>
 
-  {error && <div className="text-red-600" role="alert">Erreur : {error}</div>}
-  {success && <div className="text-green-600" role="status">Configuration enregistrée !</div>}
+  {error && <div className="text-red-600" role="alert">{t('error')} : {error}</div>}
+  {success && <div className="text-green-600" role="status">{t('saved')}</div>}
 
       {loading && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" aria-live="polite" aria-busy="true">
