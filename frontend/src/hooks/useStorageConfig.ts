@@ -18,7 +18,7 @@ interface UseStorageConfigResult {
   error: string | null;
   success: boolean;
   resetSuccess: () => void;
-  save: () => Promise<void>;
+  save: () => Promise<{ ok: boolean; error?: string }>;
   validate: () => boolean;
 }
 
@@ -58,7 +58,7 @@ export function useStorageConfig(): UseStorageConfigResult {
     return true;
   }, [backend, gdriveFolderId, gdriveJsonPath]);
 
-  const save = useCallback(async () => {
+  const save = useCallback(async (): Promise<{ ok: boolean; error?: string }> => {
     setSaving(true);
     setError(null);
     // Optimistic update: on marque le succès immédiatement; rollback si erreur
@@ -78,6 +78,7 @@ export function useStorageConfig(): UseStorageConfigResult {
       if (!res.ok) throw new Error(await res.text());
       // Confirmation finale: on laisse le succès et timer reset
       setTimeout(() => setSuccess(false), 4000);
+      return { ok: true };
     } catch (e) {
       // Rollback visuel: on rétablit les valeurs précédentes
       setBackend(prev.backend);
@@ -85,6 +86,7 @@ export function useStorageConfig(): UseStorageConfigResult {
       setGdriveJsonPath(prev.gdriveJsonPath);
       setSuccess(false);
       setError(e instanceof Error ? e.message : "Erreur inconnue");
+      return { ok: false, error: e instanceof Error ? e.message : "Erreur inconnue" };
     } finally {
       setSaving(false);
     }

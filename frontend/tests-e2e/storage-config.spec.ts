@@ -125,11 +125,10 @@ test.describe('Admin Storage Config', () => {
     await page.getByTestId('storage-config-backend').selectOption('google_drive');
     await page.getByTestId('storage-config-gdrive-folder').fill('folderERR');
     await page.getByTestId('storage-config-gdrive-json').fill('/secrets/err.json');
-    await page.getByRole('button', { name: /enregistrer/i }).click();
-    // Le toast d'erreur doit apparaître
-    await page.waitForSelector('[data-testid="storage-config-toast"]');
-    const toastText = await page.getByTestId('storage-config-toast').innerText();
-    expect(toastText.toLowerCase()).toContain('erreur');
+  await page.getByRole('button', { name: /enregistrer/i }).click();
+  // Le toast d'erreur doit apparaître (attente sur mot clé)
+  await expect(page.getByTestId('storage-config-toast')).toBeVisible();
+  await expect(page.getByTestId('storage-config-toast')).toContainText(/erreur/i);
     expect(putAttempts).toBe(1);
   });
 });

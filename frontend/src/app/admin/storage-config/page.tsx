@@ -49,11 +49,11 @@ export default function StorageConfigPage() {
         return;
       }
     }
-    await save();
-    if (!error) {
+    const result = await save();
+    if (result.ok) {
       setToast({ title: t('updatedToast'), description: t('updatedDesc'), kind: 'success' });
     } else {
-      setToast({ title: t('error'), description: error, kind: 'error' });
+      setToast({ title: t('error'), description: result.error, kind: 'error' });
     }
     setToastOpen(true);
   };
@@ -144,6 +144,7 @@ export default function StorageConfigPage() {
       <Toast.Root
         open={toastOpen}
         onOpenChange={setToastOpen}
+        data-testid="storage-config-toast"
         className={`relative rounded-md px-4 py-3 pr-10 shadow-lg text-sm font-medium ${toast.kind === "success" ? "bg-green-600 text-white" : "bg-red-600 text-white"}`}
       >
         <Toast.Title className="font-semibold text-base">{toast.title}</Toast.Title>
