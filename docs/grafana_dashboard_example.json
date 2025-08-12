@@ -1,0 +1,36 @@
+{
+  "title": "Monassurance API Overview",
+  "panels": [
+    {
+      "type": "graph",
+      "title": "HTTP Requests Total",
+      "targets": [
+        { "expr": "sum(rate(http_requests_total[5m])) by (method, path, status)" }
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "HTTP Errors Rate",
+      "targets": [
+        { "expr": "sum(rate(http_errors_created[5m])) by (path)" }
+      ]
+    },
+    {
+      "type": "graph",
+      "title": "Report Jobs Success/Error",
+      "targets": [
+        { "expr": "sum by (status) (increase(report_jobs_total{job_type=\"dummy\"}[15m]))" }
+      ]
+    },
+    {
+      "type": "gauge",
+      "title": "Active Report Jobs",
+      "targets": [
+        { "expr": "report_jobs_active{job_type=\"dummy\"}" }
+      ],
+      "fieldConfig": {"defaults": {"unit": "short"}}
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

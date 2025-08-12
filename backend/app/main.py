@@ -15,6 +15,7 @@ from backend.app.api.routes import (
     companies,
     documents,
     policies,
+    reports,
     templates,
 )
 from backend.app.core.config import get_settings
@@ -144,6 +145,7 @@ app.include_router(auth.router, prefix="/api/v1")
 app.include_router(clients.router, prefix="/api/v1")
 app.include_router(companies.router, prefix="/api/v1")
 app.include_router(policies.router, prefix="/api/v1")
+app.include_router(reports.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/api/v1")
 app.include_router(templates.router, prefix="/api/v1")
 app.include_router(admin_storage.router, prefix="/api/v1")

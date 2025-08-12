@@ -1,33 +1,8 @@
-from fastapi.testclient import TestClient
-
-from backend.app.core.security import get_password_hash
-from backend.app.db import models
-from backend.app.db.session import SessionLocal
-from backend.app.main import app
-
-client = TestClient(app)
-
-
-def ensure_admin():
-    db = SessionLocal()
-    admin = db.query(models.User).filter(models.User.email == "docadmin@example.com").first()
-    if not admin:
-        admin = models.User(email="docadmin@example.com", full_name="Doc Admin", hashed_password=get_password_hash("pass"), role=models.UserRole.ADMIN)
-        db.add(admin)
-        db.commit()
-        db.refresh(admin)
-    db.close()
-
-
-def login():
-    ensure_admin()
-    r = client.post("/api/v1/auth/login", json={"email": "docadmin@example.com", "password": "pass"})
-    assert r.status_code == 200
-    return r.json()["access_token"], r.json()["refresh_token"]
+from tests.utils import auth_headers, bearer, client
 
 
 def test_generate_document_without_template_version():
-    token, _ = login()
+    token = bearer(auth_headers("docadmin@example.com"))
     r = client.post("/api/v1/documents/generate", json={
         "document_type": "test_doc",
         "inline_context": {"value": 42},
@@ -40,7 +15,7 @@ def test_generate_document_without_template_version():
 
 
 def test_generate_document_with_template_version():
-    token, _ = login()
+    token = bearer(auth_headers("docadmin@example.com"))
     # Create template with version
     r = client.post("/api/v1/templates/", json={"name": "doc-tpl", "type": "generic", "format": "html", "content": "<p>{{ inline_context.value }}</p>"}, headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 201, r.text
@@ -61,7 +36,7 @@ def test_generate_document_with_template_version():
 
 
 def test_list_documents():
-    token, _ = login()
+    token = bearer(auth_headers("docadmin@example.com"))
     r = client.get("/api/v1/documents/", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 200
     data = r.json()
@@ -69,7 +44,7 @@ def test_list_documents():
 
 
 def test_generate_pdf_and_xlsx():
-    token, _ = login()
+    token = bearer(auth_headers("docadmin@example.com"))
     # PDF
     r = client.post("/api/v1/documents/generate", json={
         "document_type": "pdf_doc",
@@ -91,7 +66,7 @@ def test_generate_pdf_and_xlsx():
 
 
 def test_download_document():
-    token, _ = login()
+    token = bearer(auth_headers("docadmin@example.com"))
     # Génère un document HTML
     r = client.post("/api/v1/documents/generate", json={
         "document_type": "dl_doc",
@@ -108,7 +83,7 @@ def test_download_document():
 
 
 def test_signed_url_and_rate_limit():
-    token, _ = login()
+    token = bearer(auth_headers("docadmin@example.com"))
     # Génère un document
     r = client.post("/api/v1/documents/generate", json={
         "document_type": "rate_doc",
@@ -130,7 +105,7 @@ def test_signed_url_and_rate_limit():
 
 
 def test_generate_encrypted_and_compressed():
-    token, _ = login()
+    token = auth_headers("docadmin@example.com")["Authorization"].split()[1]
     r = client.post("/api/v1/documents/generate", json={
         "document_type": "secure_doc",
         "inline_context": {"_compress": True, "_encrypt": True, "data": "secret"},
@@ -142,7 +117,7 @@ def test_generate_encrypted_and_compressed():
     assert meta["encrypted"] is True
 
 def test_purge_orphans_requires_admin():
-    token, _ = login()  # admin
+    token = auth_headers("docadmin@example.com")["Authorization"].split()[1]
     from backend.app.services.document_renderer import OUTPUT_DIR
     orphan = OUTPUT_DIR / "doc_orphan.txt"
     orphan.write_text("orphan")

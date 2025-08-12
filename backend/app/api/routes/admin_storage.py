@@ -42,9 +42,15 @@ def update_storage_config(payload: StorageConfigUpdate, db: Session = Depends(ge
         import os
         if not os.path.exists(payload.gdrive_service_account_json_path):
             raise HTTPException(status_code=400, detail="Fichier Service Account introuvable")
+    if payload.backend == "s3":
+        if not payload.s3_bucket:
+            raise HTTPException(status_code=400, detail="Bucket S3 requis")
     cfg.backend = payload.backend
     cfg.gdrive_folder_id = payload.gdrive_folder_id
     cfg.gdrive_service_account_json_path = payload.gdrive_service_account_json_path
+    cfg.s3_bucket = payload.s3_bucket
+    cfg.s3_region = payload.s3_region
+    cfg.s3_endpoint_url = payload.s3_endpoint_url
     db.add(cfg)
     db.commit()
     db.refresh(cfg)

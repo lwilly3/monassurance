@@ -1,3 +1,10 @@
+# MonAssurance
+![Couverture des tests](coverage_badge.svg)
+
+# MONASSURANCE – Backend
+
+![CI](https://github.com/lwilly3/monassurance/actions/workflows/ci.yml/badge.svg)
+[![codecov](https://codecov.io/gh/lwilly3/monassurance/branch/main/graph/badge.svg)](https://codecov.io/gh/lwilly3/monassurance)
 # MONASSURANCE – Backend
 
 ![CI](https://github.com/lwilly3/monassurance/actions/workflows/ci.yml/badge.svg)
@@ -261,6 +268,85 @@ Prochain ajout: Next.js + TypeScript avec pages d'authentification consommant l'
 ## Tests
 ```bash
 pytest -q
+```
+
+### Helpers de tests
+
+Des utilitaires centralisés se trouvent dans `tests/utils.py` :
+
+- `auth_headers(email, role=None)` génère un header Authorization pour un utilisateur (admin par défaut, `role="user"` pour user standard).
+- `admin_headers(email="admin@example.com")` raccourci pour un admin.
+- `bearer(headers)` extrait le token pur.
+- `ensure_admin / ensure_user` (internes) créent l'utilisateur s'il n'existe pas.
+- Fixtures Pytest:
+	- `admin_headers_factory` (session) et `admin_headers` (scope fonction) pour réutiliser un header admin sans relogin.
+
+Objectif: réduire la duplication de création/login dans les tests (refactor appliqué aux suites templates, documents, reports, storage, audit).
+
+### Metrics de jobs rapports
+
+Les tâches de rapports exposent des métriques Prometheus additionnelles:
+
+- `report_jobs_total{job_type, status}`: compteur (status = `success` | `error`).
+- `report_jobs_active{job_type}`: gauge du nombre de jobs en cours (retombe à 0 après exécution).
+
+Couvert par des tests:
+- Succès (génération inline): vérifie compteur `success` et gauge=0.
+- Erreur (monkeypatch de l'horodatage pour provoquer une exception): vérifie apparition du label `status="error"`.
+
+### File d'attente & fallback
+
+Les jobs sont enqueued via RQ si Redis est disponible, sinon exécutés inline. Les tests simulent:
+- Job queued (monkeypatch de la queue).
+- Job terminé (fetch simulé renvoyant `finished`).
+- Statut `unknown` pour un ID inexistant.
+
+#### Inline fallback détaillé
+
+Le décorateur `@task` (voir `backend/app/core/queue.py`) choisit dynamiquement:
+- Si Redis + RQ importables: `queue.enqueue(fn, *args)`.
+- Sinon (import impossible, connexion Redis KO, exception d'enqueue): exécution immédiate (inline) de la fonction cible.
+
+Conséquences:
+- Les tests et environnements de dev fonctionnent sans Redis.
+- Les métriques de jobs rapport reflètent immédiatement l'état (gauge retombe à 0) pour l'exécution inline.
+- L'endpoint `POST /api/v1/reports/dummy` renvoie alors `job_id="inline"`.
+
+Pour activer la vraie file: lancer un Redis local (ex: `docker run -p 6379:6379 redis:7`) et vérifier `settings.redis_url`.
+
+#### Typage RQ & stubs
+
+Pour ne pas imposer la dépendance RQ aux outils de typage quand Redis est absent, le code utilise `TYPE_CHECKING` + imports conditionnels. Une classe stub minimale est fournie comme fallback pour permettre les monkeypatch dans les tests.
+
+Si vous souhaitez renforcer le typage, vous pouvez ajouter un fichier stub `.pyi` séparé exposant seulement les signatures `enqueue(...)` et `Job.fetch(...)` nécessaires.
+
+### Exécution partielle
+
+Pour lancer uniquement les tests rapports:
+```bash
+pytest -q tests/test_reports_*.py
+```
+Pour exécuter une seule fonction de test:
+```bash
+pytest -q tests/test_reports_metrics_errors.py::test_metrics_error_counter
+```
+
+### Dashboard Grafana exemple
+
+Un exemple minimal de dashboard se trouve dans `docs/grafana_dashboard_example.json` avec:
+- Throughput & taux d'erreurs HTTP (PromQL rate() & increase())
+- Compteurs succès/erreur des jobs rapports
+- Gauge jobs actifs
+
+Import: Grafana -> Dashboards -> Import -> coller JSON.
+
+### Makefile
+
+Des cibles pratiques:
+```bash
+make test           # tous les tests
+make test-reports   # seulement rapports
+make test-fast      # sélection rapide (k=reports)
 ```
 
 ## Documentation complémentaire

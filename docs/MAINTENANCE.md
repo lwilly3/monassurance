@@ -143,3 +143,25 @@ Améliorations futures suggérées:
 - Externalisation dictionnaire i18n + sélection langue dynamique.
 - Suppression instrumentation verbose une fois CI fiable.
 
+### Extension S3 & File d'attente (Étape 8)
+
+Backend de stockage étendu pour supporter `s3` (champs ajoutés dans `storage_config`: `s3_bucket` obligatoire, `s3_region`, `s3_endpoint_url` optionnels). Migration: révision `20250812_0003`.
+
+Frontend: page admin mise à jour (sélecteur S3 + champs dynamiques). Hook `useStorageConfig` enrichi pour envoyer/recevoir les champs S3.
+
+File de tâches: introduction d'une couche minimale RQ (`backend/app/core/queue.py`) avec décorateur `@task` (méthode `.delay()`). Fallback inline si Redis absent ou indisponible.
+
+Endpoint de démonstration reporting: `POST /api/v1/reports/dummy?report_id=...` renvoie un job_id (ou `inline`). Tâche exemple: `generate_dummy_report`.
+
+Prochaines étapes recommandées:
+1. Ajouter un worker dédié (ex: script entrée `python -m rq worker default`).
+2. Persister l'état des jobs dans la table `report_jobs` (déjà dans le schéma initial), relier l'ID RQ.
+3. Endpoint de suivi: `GET /api/v1/reports/{job_id}`.
+4. Retenter (retries) + backoff: config RQ ou wrapper custom.
+5. Observabilité: métriques Prometheus (compteur jobs, durées) + logs structurés.
+6. Sécurité: quotas d'enqueue par utilisateur/admin sur une fenêtre de temps.
+
+Notes opérationnelles:
+- Exécuter `alembic upgrade head` après pull pour disposer des colonnes S3.
+- Sans Redis: les tâches s'exécutent inline (utile pour tests unitaires rapides).
+

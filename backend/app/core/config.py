@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "p8qX9VvZr3sWm2FjA0uLxY6DdNeHtKbC"
     jwt_algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
-    redis_url: str = "redis://localhost:6379/0"
+    redis_url: str = "redis://localhost:6379/0"  # alias REDIS_URL accepté
     signature_active_kid: str = "k1"
     signature_keys: dict[str, str] = {"k1": "p8qX9VvZr3sWm2FjA0uLxY6DdNeHtKbC"}
     # DB pool/connexion (PostgreSQL)

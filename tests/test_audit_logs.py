@@ -1,20 +1,12 @@
 import pytest
-from fastapi.testclient import TestClient
 
-from backend.app.main import app
+from tests.utils import auth_headers, client
 
-client = TestClient(app)
 
 @pytest.fixture(scope="module")
 def token_admin():
-    # Enregistre un utilisateur admin
-    email = "admin_audit@example.com"
-    password = "secret123"
-    client.post("/api/v1/auth/register", json={"email": email, "password": password, "role": "admin"})
-    r = client.post("/api/v1/auth/login", json={"email": email, "password": password})
-    data = r.json()
-    assert "access_token" in data, data
-    return data["access_token"]
+    headers = auth_headers("admin_audit@example.com")
+    return headers["Authorization"].split()[1]
 
 
 def test_audit_logs_listing(token_admin):

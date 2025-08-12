@@ -7,7 +7,7 @@ import * as Toast from "@radix-ui/react-toast";
 import { useStorageConfig, BackendKind } from "@/hooks/useStorageConfig";
 
 export default function StorageConfigPage() {
-  const { backend, gdriveFolderId, gdriveJsonPath, setBackend, setGdriveFolderId, setGdriveJsonPath, loading: fetching, saving: loading, error, success, save, validate, resetSuccess } = useStorageConfig();
+  const { backend, gdriveFolderId, gdriveJsonPath, s3Bucket, s3Region, s3EndpointUrl, setBackend, setGdriveFolderId, setGdriveJsonPath, setS3Bucket, setS3Region, setS3EndpointUrl, loading: fetching, saving: loading, error, success, save, validate, resetSuccess } = useStorageConfig();
   const [showJsonPath, setShowJsonPath] = useState(false);
   const [toastOpen, setToastOpen] = useState(false);
   const [toast, setToast] = useState<{ title: string; description?: string; kind: "success" | "error" }>({ title: "", kind: "success" });
@@ -22,11 +22,16 @@ export default function StorageConfigPage() {
       gdrive: { fr: 'Google Drive', en: 'Google Drive' },
       folderId: { fr: 'ID du dossier Google Drive', en: 'Google Drive folder ID' },
       jsonPath: { fr: 'Chemin du fichier Service Account JSON', en: 'Service Account JSON file path' },
-      save: { fr: 'Enregistrer', en: 'Save' },
+  save: { fr: 'Enregistrer', en: 'Save' },
       saving: { fr: 'Enregistrement...', en: 'Saving...' },
       saved: { fr: 'Configuration enregistrée !', en: 'Configuration saved!' },
       requiredFolder: { fr: 'Dossier requis', en: 'Folder required' },
       requiredJson: { fr: 'Chemin JSON requis', en: 'JSON path required' },
+  s3Bucket: { fr: 'Bucket S3', en: 'S3 Bucket' },
+  s3Region: { fr: 'Région S3 (optionnel)', en: 'S3 Region (optional)' },
+  s3Endpoint: { fr: 'Endpoint S3 custom (optionnel)', en: 'Custom S3 endpoint (optional)' },
+  s3: { fr: 'Amazon S3 / compatible', en: 'Amazon S3 / compatible' },
+  requiredBucket: { fr: 'Bucket requis', en: 'Bucket required' },
       show: { fr: 'Voir', en: 'Show' },
       hide: { fr: 'Masquer', en: 'Hide' },
       loading: { fr: 'Chargement…', en: 'Loading…' },
@@ -46,6 +51,12 @@ export default function StorageConfigPage() {
       if (!gdriveJsonPath.trim()) vErr.json = t('requiredJson');
       if (Object.keys(vErr).length) {
         setValidationErrors(vErr);
+        return;
+      }
+    }
+    if (backend === 's3') {
+      if (!s3Bucket.trim()) {
+        setValidationErrors({ folder: t('requiredBucket') });
         return;
       }
     }
@@ -82,8 +93,45 @@ export default function StorageConfigPage() {
         >
           <option value="local">{t('local')}</option>
           <option value="google_drive">{t('gdrive')}</option>
+          <option value="s3">{t('s3')}</option>
         </select>
       </div>
+      {backend === 's3' && (
+        <>
+          <div>
+            <Input
+              label={t('s3Bucket')}
+              value={s3Bucket}
+              onChange={e => { setS3Bucket(e.target.value); resetSuccess(); if (validationErrors.folder) setValidationErrors(v => ({ ...v, folder: undefined })); }}
+              required
+              disabled={loading}
+              className="mb-1"
+              data-testid="storage-config-s3-bucket"
+            />
+            {validationErrors.folder && <p className="text-sm text-red-600 mb-2" role="alert">{validationErrors.folder}</p>}
+          </div>
+          <div>
+            <Input
+              label={t('s3Region')}
+              value={s3Region}
+              onChange={e => { setS3Region(e.target.value); resetSuccess(); }}
+              disabled={loading}
+              className="mb-1"
+              data-testid="storage-config-s3-region"
+            />
+          </div>
+          <div>
+            <Input
+              label={t('s3Endpoint')}
+              value={s3EndpointUrl}
+              onChange={e => { setS3EndpointUrl(e.target.value); resetSuccess(); }}
+              disabled={loading}
+              className="mb-1"
+              data-testid="storage-config-s3-endpoint"
+            />
+          </div>
+        </>
+      )}
 
       {backend === "google_drive" && (
         <>

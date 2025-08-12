@@ -130,6 +130,7 @@ COMMANDS = {
     "testcov": lambda args: cmd_testcov(),
     "rotate-keys": lambda args: cmd_rotate_keys(args[0] if args else None),
     "show-settings": lambda args: cmd_show_settings(),
+    "rq-worker": lambda args: run([sys.executable, "-m", "rq", "worker", "default"]),
 }
 
 

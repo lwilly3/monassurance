@@ -1,42 +1,12 @@
+import hashlib
 import uuid
 
-from fastapi.testclient import TestClient
-
-from backend.app.core.security import get_password_hash
-from backend.app.db import models
-from backend.app.db.session import SessionLocal
-from backend.app.main import app
-
-client = TestClient(app)
-
-
-import hashlib
-
-from sqlalchemy.orm import Session
-
-
-def create_user(db: Session, email: str, role: models.UserRole = models.UserRole.ADMIN) -> models.User:
-    user = models.User(email=email, full_name="Admin", hashed_password=get_password_hash("pass"), role=role)
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
-
-
-def get_auth_headers(email: str = "tpladmin@example.com") -> dict[str, str]:
-    db = SessionLocal()
-    existing = db.query(models.User).filter(models.User.email == email).first()
-    if not existing:
-        create_user(db, email)
-    # login
-    resp = client.post("/api/v1/auth/login", json={"email": email, "password": "pass"})
-    assert resp.status_code == 200, resp.text
-    token = resp.json()["access_token"]
-    return {"Authorization": f"Bearer {token}"}
+from tests.utils import auth_headers as get_auth_headers
+from tests.utils import client
 
 
 def test_template_crud_flow():
-    headers = get_auth_headers()
+    headers = get_auth_headers("tpladmin@example.com")
     name = "tpl-" + str(uuid.uuid4())
     # create
     resp = client.post("/api/v1/templates/", json={"name": name, "type": "policy", "format": "html", "content": "<h1>Hi</h1>"}, headers=headers)
@@ -73,7 +43,7 @@ def test_template_crud_flow():
 
 
 def test_template_upload_file_and_previews():
-    headers = get_auth_headers()
+    headers = get_auth_headers("tpladmin@example.com")
     name = "tpl-upload-" + str(uuid.uuid4())
     # create template without initial content
     resp = client.post(
@@ -117,7 +87,7 @@ def test_template_upload_file_and_previews():
 
 
 def test_template_upload_checksum_mismatch():
-    headers = get_auth_headers()
+    headers = get_auth_headers("tpladmin@example.com")
     name = "tpl-upload-bad-" + str(uuid.uuid4())
     resp = client.post(
         "/api/v1/templates/",
@@ -141,7 +111,7 @@ def test_template_upload_checksum_mismatch():
 
 
 def test_preview_html_for_db_content():
-    headers = get_auth_headers()
+    headers = get_auth_headers("tpladmin@example.com")
     name = "tpl-inline-" + str(uuid.uuid4())
     # create template with inline content (creates version=1 in DB)
     resp = client.post(

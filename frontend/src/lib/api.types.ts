@@ -935,11 +935,17 @@ export interface components {
              * Backend
              * @enum {string}
              */
-            backend: "local" | "google_drive";
+            backend: "local" | "google_drive" | "s3";
             /** Gdrive Folder Id */
             gdrive_folder_id?: string | null;
             /** Gdrive Service Account Json Path */
             gdrive_service_account_json_path?: string | null;
+            /** S3 Bucket */
+            s3_bucket?: string | null;
+            /** S3 Region */
+            s3_region?: string | null;
+            /** S3 Endpoint Url */
+            s3_endpoint_url?: string | null;
             /**
              * Updated At
              * Format: date-time
@@ -952,11 +958,17 @@ export interface components {
              * Backend
              * @enum {string}
              */
-            backend: "local" | "google_drive";
+            backend: "local" | "google_drive" | "s3";
             /** Gdrive Folder Id */
             gdrive_folder_id?: string | null;
             /** Gdrive Service Account Json Path */
             gdrive_service_account_json_path?: string | null;
+            /** S3 Bucket */
+            s3_bucket?: string | null;
+            /** S3 Region */
+            s3_region?: string | null;
+            /** S3 Endpoint Url */
+            s3_endpoint_url?: string | null;
         };
         /** TemplateCreate */
         TemplateCreate: {
