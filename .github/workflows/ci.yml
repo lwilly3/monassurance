@@ -216,4 +216,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-traces
-          path: frontend/test-results
+          path: |
+            frontend/test-results
+            frontend/playwright-report

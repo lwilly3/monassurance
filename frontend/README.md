@@ -6,6 +6,7 @@ Frontend de l’application Monassurance, basé sur Next.js (App Router) et Type
 
 ![Frontend E2E Type Check](https://github.com/lwilly3/monassurance/actions/workflows/frontend-e2e-typecheck.yml/badge.svg)
 ![CI (e2e tests)](https://github.com/lwilly3/monassurance/actions/workflows/ci.yml/badge.svg)
+![E2E Coverage (à venir)](https://img.shields.io/badge/e2e--coverage-pending-lightgrey)
 
 ### Prérequis
 - Node.js 18.x (ou supérieur compatible)

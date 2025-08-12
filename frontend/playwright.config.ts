@@ -19,8 +19,8 @@ export default defineConfig({
   },
   // Pas de retries spécifiques par projet dans Playwright; on ajuste actionTimeout pour absorber lenteurs.
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'], actionTimeout: 8_000 } },
     { name: 'firefox', use: { ...devices['Desktop Firefox'], actionTimeout: 15_000 } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'], actionTimeout: 20_000 } }
+    { name: 'webkit', use: { ...devices['Desktop Safari'], actionTimeout: 18_000 } }
   ]
 });
