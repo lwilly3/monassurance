@@ -4,6 +4,9 @@ const PUBLIC_PATHS = new Set(['/login', '/_next', '/favicon.ico']);
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+  if (process.env.NEXT_PUBLIC_DISABLE_AUTH === '1') {
+    return NextResponse.next();
+  }
   if ([...PUBLIC_PATHS].some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.next();
   }
