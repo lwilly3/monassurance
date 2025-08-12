@@ -182,6 +182,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install deps
         run: npm ci
+      - name: Install Playwright browsers (chromium only)
+        run: npx playwright install --with-deps chromium
       - name: Build
         run: NEXT_PUBLIC_DISABLE_AUTH=1 npm run build
       - name: Start app
