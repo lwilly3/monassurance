@@ -189,8 +189,8 @@ jobs:
           key: ${{ runner.os }}-playwright-${{ hashFiles('frontend/package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-playwright-
-      - name: Install Playwright browsers (chromium only)
-        run: npx playwright install --with-deps chromium
+      - name: Install Playwright browsers (all)
+        run: npx playwright install --with-deps
       - name: Build
         run: NEXT_PUBLIC_DISABLE_AUTH=1 npm run build
       - name: Start app
@@ -211,3 +211,9 @@ jobs:
         with:
           name: playwright-report
           path: frontend/playwright-report
+      - name: Upload Traces (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: frontend/test-results

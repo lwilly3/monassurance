@@ -61,7 +61,9 @@ export function useStorageConfig(): UseStorageConfigResult {
   const save = useCallback(async () => {
     setSaving(true);
     setError(null);
-    setSuccess(false);
+    // Optimistic update: on marque le succès immédiatement; rollback si erreur
+    setSuccess(true);
+    const prev = { backend, gdriveFolderId, gdriveJsonPath };
     try {
       const body: StorageConfigUpdate = {
         backend,
@@ -74,9 +76,14 @@ export function useStorageConfig(): UseStorageConfigResult {
         body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error(await res.text());
-      setSuccess(true);
+      // Confirmation finale: on laisse le succès et timer reset
       setTimeout(() => setSuccess(false), 4000);
     } catch (e) {
+      // Rollback visuel: on rétablit les valeurs précédentes
+      setBackend(prev.backend);
+      setGdriveFolderId(prev.gdriveFolderId);
+      setGdriveJsonPath(prev.gdriveJsonPath);
+      setSuccess(false);
       setError(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
       setSaving(false);
