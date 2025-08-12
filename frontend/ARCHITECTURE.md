@@ -52,6 +52,7 @@ Objectif: ajuster dynamiquement le backend de stockage documents (local vs Googl
 Implémentation:
 - Client component `page.tsx` (directive "use client").
 - Hook `useStorageConfig` gère: état, chargement initial (GET), validation minimale, sauvegarde (PUT), drapeaux `loading` / `saving` / `success` / `error`.
+  - Stratégie: sauvegarde optimiste (succès affiché d'emblée, rollback + erreur si PUT échoue).
 - Champs conditionnels: visibles uniquement si backend = google_drive.
 - Feedback: toast (Radix), messages inline, overlay lors du `saving`.
 - I18n embarqué minimal (`fr`/`en`) via dictionnaire local.

@@ -118,6 +118,7 @@ Backend:
 Frontend:
 - Page: `frontend/src/app/admin/storage-config/page.tsx` (client component).
 - Logique métier isolée dans le hook `frontend/src/hooks/useStorageConfig.ts` (chargement initial, validation basique, PUT, état succès/erreur, auto-reset succès après 4s).
+- Sauvegarde optimiste: le hook marque `success=true` immédiatement, puis rollback (restaure les valeurs précédentes + affiche erreur) si la requête PUT échoue.
 - Accessibilité: libellés associés, feedback rôle `alert` / `status`, overlay de chargement avec `aria-busy`.
 - I18n minimal embarqué (fr/en) – à externaliser ultérieurement.
 - Toast (Radix) pour feedback de sauvegarde.
