@@ -163,3 +163,42 @@ jobs:
       - name: Build image
         run: |
           docker build -t monassurance:ci .
+
+  frontend-e2e-tests:
+    runs-on: ubuntu-latest
+    needs: build-test
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4.2.2
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install deps
+        run: npm ci
+      - name: Build
+        run: NEXT_PUBLIC_DISABLE_AUTH=1 npm run build
+      - name: Start app
+        run: NEXT_PUBLIC_DISABLE_AUTH=1 npm run start &
+      - name: Wait for server
+        run: |
+          for i in {1..40}; do
+            curl -sf http://localhost:3000 >/dev/null && break
+            sleep 1
+          done
+      - name: Run Playwright tests
+        env:
+          CI: true
+        run: npx playwright test --reporter=dot
+      - name: Upload Playwright Report (artifact)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report
