@@ -11,26 +11,26 @@ def test_admin_login():
     """Test de connexion avec l'utilisateur admin."""
     
     # URL de l'API d'authentification
-    login_url = "http://localhost:8002/api/v1/auth/login"
+    login_url = "http://localhost:8000/api/v1/auth/login"
     
     # Données de connexion
     credentials = {
-        "username": "admin@monassurance.com",
+        "email": "admin@monassurance.com",
         "password": "D3faultpass"
     }
     
     try:
         print("🔐 Test de connexion administrateur...")
         print(f"   URL: {login_url}")
-        print(f"   Email: {credentials['username']}")
+        print(f"   Email: {credentials['email']}")
         print(f"   Mot de passe: {credentials['password']}")
         print()
         
         # Tentative de connexion
         response = requests.post(
             login_url,
-            data=credentials,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            json=credentials,
+            headers={"Content-Type": "application/json"},
             timeout=10
         )
         
@@ -51,7 +51,7 @@ def test_admin_login():
             
     except requests.exceptions.ConnectionError:
         print("❌ Impossible de se connecter au serveur !")
-        print("   Assurez-vous que le serveur backend est démarré sur le port 8002")
+        print("   Assurez-vous que le serveur backend est démarré sur le port 8000")
         return False
         
     except Exception as e:
@@ -63,9 +63,9 @@ def test_protected_endpoint():
     """Test d'un endpoint protégé avec le token d'authentification."""
     
     # D'abord, obtenir un token
-    login_url = "http://localhost:8002/api/v1/auth/login"
+    login_url = "http://localhost:8000/api/v1/auth/login"
     credentials = {
-        "username": "admin@monassurance.com",
+        "email": "admin@monassurance.com",
         "password": "D3faultpass"
     }
     
@@ -73,8 +73,8 @@ def test_protected_endpoint():
         # Connexion
         response = requests.post(
             login_url,
-            data=credentials,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            json=credentials,
+            headers={"Content-Type": "application/json"},
             timeout=10
         )
         
@@ -90,10 +90,10 @@ def test_protected_endpoint():
             return False
         
         # Test d'un endpoint protégé
-        protected_url = "http://localhost:8002/api/v1/users/me"
+        protected_url = "http://localhost:8000/health"
         headers = {"Authorization": f"Bearer {access_token}"}
         
-        print("🔒 Test endpoint protégé /users/me...")
+        print("🔒 Test endpoint /health...")
         response = requests.get(protected_url, headers=headers, timeout=10)
         
         print("📊 Réponse:")
