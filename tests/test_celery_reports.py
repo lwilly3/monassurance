@@ -1,6 +1,4 @@
 """Tests pour les nouvelles fonctionnalités Celery."""
-from unittest.mock import MagicMock, patch
-
 from tests.utils import auth_headers, client
 
 
@@ -36,28 +34,26 @@ def test_celery_heavy_report_invalid_type():
     """Test avec type de rapport invalide."""
     headers = auth_headers("admin.celery@example.com")
     
-    with patch('backend.app.api.routes.celery_reports.CELERY_AVAILABLE', True):
-        resp = client.post(
-            "/api/v1/reports/heavy?report_type=invalid", 
-            headers=headers
-        )
-        assert resp.status_code == 400
-        assert "Type de rapport non supporté" in resp.json()["detail"]
+    resp = client.post(
+        "/api/v1/reports/heavy?report_type=invalid", 
+        headers=headers
+    )
+    assert resp.status_code == 400
+    assert "Type de rapport non supporté" in resp.json()["detail"]
 
 
 def test_celery_unavailable_fallback():
     """Test de fallback quand Celery n'est pas disponible."""
     headers = auth_headers("admin.fallback@example.com")
     
-    with patch('backend.app.api.routes.celery_reports.CELERY_AVAILABLE', False):
-        # Test dummy report - devrait utiliser RQ fallback
-        resp = client.post("/api/v1/reports/dummy?report_id=fallback_test", headers=headers)
-        assert resp.status_code == 200
-        
-        # Test heavy report - devrait échouer
-        resp = client.post("/api/v1/reports/heavy?report_type=pdf", headers=headers)
-        assert resp.status_code == 503
-        assert "Celery requis" in resp.json()["detail"]
+    # Test dummy report - devrait utiliser fallback
+    resp = client.post("/api/v1/reports/dummy?report_id=fallback_test", headers=headers)
+    assert resp.status_code == 200
+    
+    # Test heavy report - devrait échouer
+    resp = client.post("/api/v1/reports/heavy?report_type=pdf", headers=headers)
+    assert resp.status_code == 503
+    assert "Celery requis" in resp.json()["detail"]
 
 
 def test_job_status_celery():
