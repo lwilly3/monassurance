@@ -282,6 +282,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/reports/heavy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Launch Heavy Report
+         * @description Lance un rapport lourd avec Celery.
+         */
+        post: operations["launch_heavy_report_api_v1_reports_heavy_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/reports/jobs/{job_id}": {
         parameters: {
             query?: never;
@@ -289,7 +309,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Job Status */
+        /**
+         * Job Status
+         * @description Récupère le statut d'un job avec support Celery et RQ.
+         */
         get: operations["job_status_api_v1_reports_jobs__job_id__get"];
         put?: never;
         post?: never;
@@ -1912,6 +1935,42 @@ export interface operations {
         parameters: {
             query: {
                 report_id: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportJobLaunchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    launch_heavy_report_api_v1_reports_heavy_post: {
+        parameters: {
+            query: {
+                /** @description Type de rapport: pdf, excel, analysis */
+                report_type: string;
+                /** @description Nombre de pages (pour PDF) */
+                pages?: number;
+                /** @description Temps de traitement simulé (secondes) */
+                processing_time?: number;
             };
             header?: never;
             path?: never;
