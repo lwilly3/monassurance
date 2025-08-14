@@ -1,5 +1,13 @@
 # Root ignore
 
+# Environment variables (security)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
+*.env
+
 # OS / editor
 .DS_Store
 *.swp

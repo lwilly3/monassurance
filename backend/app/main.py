@@ -152,6 +152,11 @@ app.include_router(templates.router, prefix="/api/v1")
 app.include_router(admin_storage.router, prefix="/api/v1")
 app.include_router(audit_logs.router, prefix="/api/v1")
 
+# Import et ajout du router seed
+from backend.app.api.v1.seed import router as seed_router
+
+app.include_router(seed_router, prefix="/api/v1/seed", tags=["seed"])
+
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 
