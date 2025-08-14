@@ -100,9 +100,9 @@ export default function AdminTestPage() {
         )}
 
         <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-          <h3 className="font-semibold mb-2">🚀 Instructions d'utilisation:</h3>
+          <h3 className="font-semibold mb-2">🚀 Instructions d&apos;utilisation:</h3>
           <ol className="list-decimal list-inside space-y-1 text-sm">
-            <li>Testez d'abord la connexion backend</li>
+            <li>Testez d&apos;abord la connexion backend</li>
             <li>Testez ensuite la connexion admin avec les identifiants par défaut</li>
             <li>Utilisez la page de login pour vous connecter manuellement</li>
             <li>Changez le mot de passe après la première connexion</li>

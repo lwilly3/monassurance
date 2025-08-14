@@ -7,7 +7,7 @@ import * as Toast from "@radix-ui/react-toast";
 import { useStorageConfig, BackendKind } from "@/hooks/useStorageConfig";
 
 export default function StorageConfigPage() {
-  const { backend, gdriveFolderId, gdriveJsonPath, s3Bucket, s3Region, s3EndpointUrl, setBackend, setGdriveFolderId, setGdriveJsonPath, setS3Bucket, setS3Region, setS3EndpointUrl, loading: fetching, saving: loading, error, success, save, validate, resetSuccess } = useStorageConfig();
+  const { backend, gdriveFolderId, gdriveJsonPath, s3Bucket, s3Region, s3EndpointUrl, setBackend, setGdriveFolderId, setGdriveJsonPath, setS3Bucket, setS3Region, setS3EndpointUrl, loading: fetching, saving: loading, error, success, save, resetSuccess } = useStorageConfig();
   const [showJsonPath, setShowJsonPath] = useState(false);
   const [toastOpen, setToastOpen] = useState(false);
   const [toast, setToast] = useState<{ title: string; description?: string; kind: "success" | "error" }>({ title: "", kind: "success" });

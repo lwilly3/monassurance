@@ -108,7 +108,7 @@ export function useStorageConfig(): UseStorageConfigResult {
     } finally {
       setSaving(false);
     }
-  }, [backend, gdriveFolderId, gdriveJsonPath]);
+  }, [backend, gdriveFolderId, gdriveJsonPath, s3Bucket, s3Region, s3EndpointUrl]);
 
   return {
     backend,
