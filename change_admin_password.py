@@ -4,12 +4,14 @@ Script pour changer le mot de passe de l'administrateur par défaut.
 Usage: python change_admin_password.py
 """
 
-import sys
 import getpass
+import sys
+
 from sqlalchemy.orm import sessionmaker
-from backend.app.db.session import engine
-from backend.app.db.models.user import User
+
 from backend.app.core.security import get_password_hash, verify_password
+from backend.app.db.models.user import User
+from backend.app.db.session import engine
 
 
 def change_admin_password():

@@ -6,13 +6,14 @@ Create Date: 2025-08-14 16:27:17.654878
 """
 from __future__ import annotations
 
-from alembic import op
-import sqlalchemy as sa
-from sqlalchemy.sql import table, column
-from sqlalchemy import String, DateTime, Boolean
 from datetime import datetime
-from passlib.context import CryptContext
 
+import sqlalchemy as sa
+from passlib.context import CryptContext
+from sqlalchemy import Boolean, DateTime, String
+from sqlalchemy.sql import column, table
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = '993d20339d96'

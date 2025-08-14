@@ -3,9 +3,8 @@
 Test de l'authentification avec l'utilisateur admin par défaut.
 """
 
+
 import requests
-import sys
-import time
 
 
 def test_admin_login():
@@ -35,18 +34,18 @@ def test_admin_login():
             timeout=10
         )
         
-        print(f"📊 Réponse du serveur:")
+        print("📊 Réponse du serveur:")
         print(f"   Status: {response.status_code}")
         print(f"   Headers: {dict(response.headers)}")
         
         if response.status_code == 200:
             data = response.json()
-            print(f"✅ Connexion réussie !")
+            print("✅ Connexion réussie !")
             print(f"   Access token: {data.get('access_token', 'N/A')[:50]}...")
             print(f"   Token type: {data.get('token_type', 'N/A')}")
             return True
         else:
-            print(f"❌ Connexion échouée !")
+            print("❌ Connexion échouée !")
             print(f"   Contenu: {response.text}")
             return False
             
@@ -97,19 +96,19 @@ def test_protected_endpoint():
         print("🔒 Test endpoint protégé /users/me...")
         response = requests.get(protected_url, headers=headers, timeout=10)
         
-        print(f"📊 Réponse:")
+        print("📊 Réponse:")
         print(f"   Status: {response.status_code}")
         
         if response.status_code == 200:
             user_data = response.json()
-            print(f"✅ Données utilisateur récupérées !")
+            print("✅ Données utilisateur récupérées !")
             print(f"   ID: {user_data.get('id', 'N/A')}")
             print(f"   Email: {user_data.get('email', 'N/A')}")
             print(f"   Nom: {user_data.get('full_name', 'N/A')}")
             print(f"   Rôle: {user_data.get('role', 'N/A')}")
             return True
         else:
-            print(f"❌ Accès à l'endpoint protégé échoué !")
+            print("❌ Accès à l'endpoint protégé échoué !")
             print(f"   Contenu: {response.text}")
             return False
             

@@ -36,14 +36,18 @@ def test_heavy_report():
         print("⏩ Test rapport lourd skippé en CI")
         return True
     
-    response = requests.post("http://localhost:8000/api/v1/reports/heavy?report_type=pdf&pages=5")
-    print(f"Status: {response.status_code}")
-    if response.status_code == 200:
-        data = response.json()
-        print(f"Réponse: {data}")
-        return True
-    else:
-        print(f"Erreur: {response.text}")
+    try:
+        response = requests.post("http://localhost:8000/api/v1/reports/heavy?report_type=pdf&pages=5")
+        print(f"Status: {response.status_code}")
+        if response.status_code == 200:
+            data = response.json()
+            print(f"Réponse: {data}")
+            return True
+        else:
+            print(f"Erreur: {response.text}")
+            return False
+    except requests.exceptions.RequestException:
+        print("❌ Service non disponible")
         return False
 
 
