@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class TemplateVersion(Base):
     """Version immuable d'un template (numérotation incrémentale)."""
+
     __tablename__ = "template_versions"
     __table_args__ = (UniqueConstraint("template_id", "version", name="uq_template_version"),)
 

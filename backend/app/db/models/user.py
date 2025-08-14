@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, DateTime, String, text
 from sqlalchemy import Enum as SQLEnum
@@ -21,6 +21,7 @@ class UserRole(str, Enum):
 
 class User(Base):
     """Utilisateur applicatif (auth + ownership de clients)."""
+
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
@@ -35,4 +36,4 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=text("TRUE"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, server_default=text("CURRENT_TIMESTAMP"))
 
-    clients: Mapped[List[Client]] = relationship(back_populates="owner")
+    clients: Mapped[list[Client]] = relationship(back_populates="owner")

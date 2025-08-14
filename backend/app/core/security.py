@@ -100,7 +100,8 @@ def revoke_all_refresh_tokens(user_id: int, db: Session) -> int:
 
 def use_refresh_token(token: str, db: Session) -> Optional[str]:
     """Consomme un refresh token: vérifie validité, révoque l'ancien et retourne le subject.
-    Retourne None si invalide ou expiré."""
+    Retourne None si invalide ou expiré.
+    """
     token_hash = _hash_token(token)
     db_token = db.query(models.RefreshToken).filter(models.RefreshToken.token_hash == token_hash).first()
     if not db_token:

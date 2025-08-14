@@ -6,6 +6,7 @@ from backend.app.db.base import Base
 
 class DeclarationItem(Base):
     """Ligne d'une déclaration (montants + référence police)."""
+
     __tablename__ = "declaration_items"
     id: Mapped[int] = mapped_column(primary_key=True)
     batch_id: Mapped[int] = mapped_column(ForeignKey("declaration_batches.id", ondelete="CASCADE"))

@@ -1,167 +1,296 @@
-# Maintenance & Exploitation – MONASSURANCE
+# Guide de maintenance MonAssurance
 
-Ce document synthétise les améliorations mises en place pour fiabiliser, maintenir et comprendre le backend.
+## 🔧 Opérations courantes
 
-## 1) Base de données & migrations
-- Passage SQLite → PostgreSQL documenté (README) et outillé (docker-compose, Alembic override via settings).
-- Migrations Alembic ciblées (no-op sur SQLite, actives sur Postgres):
-  - 20250808_0004: index composite audit_logs(action, object_type, created_at).
-  - 20250809_0005: JSON → JSONB + index GIN sur colonnes JSONB (integration_configs.extra, generated_documents.doc_metadata, declaration_items.data, report_jobs.params, audit_logs.audit_metadata).
-  - 20250809_0006: extensions pg_trgm & citext; index FK fréquents; index partiel generated_documents(created_at) WHERE status='ready'.
-  - 20250809_0007: emails en CITEXT (users.email, clients.email) + nettoyage index redondant.
-  - 20250809_0008: index trigram (GIN) sur clients.email et clients.phone.
-  - 20250809_0009: index trigram (GIN) sur companies.name.
-- Modèles: SQLAlchemy JSON conservé pour portabilité; migration force JSONB en PG.
-- Indices: composites, partiels et GIN pour répondre aux filtres/LIKE fréquents.
+### Déploiement
 
-### Politique de migrations (model-first)
+#### Mise à jour de production
 
-Objectif: garantir que le schéma de la base soit toujours dérivé des modèles SQLAlchemy et appliqué via Alembic (cohérence code ⇄ DB).
+```bash
+# 1. Vérification pré-déploiement
+make check-strict
+make test
 
-Règles:
-- Ne jamais corriger un schéma en modifiant un fichier de migration déjà existant.
-- Toute modification (colonne, type, défaut, contrainte) se fait d’abord dans le modèle SQLAlchemy.
-- Toujours utiliser `server_default=text("...")` pour les valeurs par défaut côté serveur (ex: `text("TRUE")`, `text("now()")`).
-- Après modification de modèle:
-  1) Générer une migration: `alembic revision --autogenerate -m "description"`
-  2) Relire la migration (types, `server_default`, contraintes) et l’ajuster si besoin.
-  3) Appliquer: `alembic upgrade head`.
-- En cas d’erreur (dialecte PG/SQLite/MySQL), revenir au modèle, corriger, régénérer la migration.
-- Ne jamais patcher directement la base sans migration correspondante.
+# 2. Backup base de données
+pg_dump monassurance > backup_$(date +%Y%m%d_%H%M%S).sql
 
-Bénéfices:
-- Cohérence totale entre modèles, migrations et base.
-- Migrations reproductibles, compatibles multi-environnements.
-- Réduction des incidents en production liés aux écarts de schéma.
+# 3. Déploiement
+git tag v1.2.3
+git push origin v1.2.3
 
-Procédure Postgres (dev/staging):
-- Copier .env.example → .env; définir DATABASE_URL Postgres.
-- Démarrer la DB: `docker compose up -d db`.
-- Appliquer le schéma: `alembic upgrade head`.
-- Démarrer l’API: uvicorn ou `docker compose up -d backend` (exécute upgrade automatiquement).
+# 4. Migrations (si nécessaire)
+alembic upgrade head
 
-## 2) Observabilité & santé
-- Endpoints:
-  - /health: disponibilité générale.
-  - /health/db: ping SQL (retourne 503 si indisponible).
-- Latence HTTP:
-  - Middleware trace la durée et ajoute l’en-tête X-Response-Time.
-  - Alerte WARNING si > http_warn_ms (def. 1000ms).
-- Requêtes SQL lentes:
-  - Log WARNING si > slow_query_ms (def. 500ms).
-  - DEBUG_SQL: echo SQLAlchemy activable (dev uniquement).
-- Paramètres (.env):
-  - SLOW_QUERY_MS, DEBUG_SQL, HTTP_WARN_MS, ENABLE_METRICS, LOG_JSON, REQUEST_ID_HEADER.
+# 5. Redémarrage services
+docker-compose restart backend
+```
 
-## 3) Pooling & robustesse DB
-- Engine SQLAlchemy Postgres avec: pool_pre_ping, pool_size, max_overflow, pool_recycle.
-- Branche SQLite inchangée (connect_args check_same_thread pour tests/dev).
+#### Rollback
 
-## 4) CI/CD
-- Job SQLite: lint (ruff), types (mypy), tests + couverture, upload Codecov; build Docker (job séparé).
-- Job Postgres: service postgres:16, alembic upgrade head, tests sur PostgreSQL, upload couverture (flag postgres), health check DB.
-- Codecov: badges et OIDC configurés; étape non bloquante.
+```bash
+# 1. Identifier la version précédente
+git tag --sort=-version:refname | head -5
 
-## 5) Bonnes pratiques & opérations
-- Migrations:
-  - Générer: `alembic revision --autogenerate -m "message"`.
-  - Appliquer: `alembic upgrade head`.
-  - Downgrade: `alembic downgrade -1` (prudence en prod).
-- Indexation:
-  - Ajouter GIN sur JSONB si requêtes par clés; trigram (pg_trgm) pour LIKE/ILIKE; partiels pour filtres stables.
-- Backups:
-  - Utiliser pg_dump/pg_restore; prévoir une stratégie de rétention côté infra.
-- Secrets:
-  - Gestion via secrets CI/CD et orchestrateur (ne jamais committer JWT_SECRET_KEY/credentials DB).
+# 2. Rollback base de données (si nécessaire)
+alembic downgrade <revision>
 
-## 6) Dépannage rapide
-- /health/db → 503: vérifier DATABASE_URL, réseau, droits Postgres.
-- Alembic: vérifier que alembic/env.py lit settings.database_url; `alembic history` puis `alembic upgrade head`.
-- Lenteurs: baisser SLOW_QUERY_MS et HTTP_WARN_MS en dev; vérifier index manquants; activer DEBUG_SQL si nécessaire.
+# 3. Rollback application
+git checkout v1.2.2
+docker-compose restart backend
+```
 
-## 7) Références utiles
-## 8) Sécurité (CORS, en-têtes, rate limiting)
+### Gestion base de données
 
-- CORS: configurable via `CORS_ORIGINS`, `CORS_ALLOW_METHODS`, `CORS_ALLOW_HEADERS`, `CORS_ALLOW_CREDENTIALS`.
-- En-têtes sécurité: `X-Frame-Options`, `Referrer-Policy`, `X-Content-Type-Options: nosniff` ajoutés par défaut. `Content-Security-Policy` via `SECURITY_CSP`. `Strict-Transport-Security` via `SECURITY_HSTS` (activer uniquement en HTTPS).
-- Rate limiting global (désactivé par défaut): par IP + chemin. Activation par `RATE_LIMIT_ENABLED=true`. Seuils: `DEFAULT_RATE_LIMIT_PER_MINUTE`, `AUTH_RATE_LIMIT_PER_MINUTE`. Backing Redis auto si dispo, sinon fallback mémoire.
-- Throttling login: limites par IP et par compte par minute pour `POST /auth/login`. Redis préféré, fallback mémoire si indisponible.
+#### Migrations
 
-## 9) Sessions d'appareils (refresh tokens)
+```bash
+# Créer une nouvelle migration
+alembic revision --autogenerate -m "add_new_field_to_policy"
 
-- Schéma: `refresh_tokens` avec `device_label`, `ip_address`, `user_agent`.
-- Endpoints:
-  - `GET /api/v1/auth/devices`: liste les sessions actives de l'utilisateur courant.
-  - `DELETE /api/v1/auth/devices/{id}`: révoque une session spécifique si propriété vérifiée.
-- Rotation: `POST /api/v1/auth/refresh` révoque le token consommé et en émet un nouveau.
-- Migrations: une migration Alembic ajoute les colonnes device aux anciennes bases (aucun backfill runtime n'est conservé; exécuter `alembic upgrade head`).
+# Appliquer les migrations
+alembic upgrade head
 
-### À curer (dettes techniques)
+# Vérifier l'état des migrations
+alembic current
+alembic history
 
-- Supprimer le backfill SQLite au démarrage une fois toutes les DB locales régénérées/migrées (ne garder que les migrations Alembic).
-- Consolider la définition du modèle `RefreshToken` en un seul module (aujourd'hui présent dans `backend/app/db/models.py` et `backend/app/db/models/refresh_token.py`) et harmoniser les imports.
-- Démarrage dev: `uvicorn backend.app.main:app --reload` (après `alembic upgrade head`).
-- Docker Compose: `docker compose up -d` (DB + backend).
-- Tests: `pytest -q`.
-- Lint: `ruff check .`; Types: `mypy --config-file mypy.ini .`.
+# Rollback d'une migration
+alembic downgrade -1
+```
 
-## 10) Administration – Configuration stockage (Frontend + Backend)
+#### Maintenance base de données
 
-Objectif: Permettre à un administrateur de définir dynamiquement le backend de stockage des documents (local ou Google Drive) via l'UI.
+```sql
+-- Statistiques des tables
+SELECT 
+    schemaname,
+    tablename,
+    n_tup_ins,
+    n_tup_upd,
+    n_tup_del,
+    n_live_tup,
+    n_dead_tup
+FROM pg_stat_user_tables
+ORDER BY n_live_tup DESC;
 
-Backend:
-- Endpoint lecture: `GET /api/v1/admin/storage-config` (retourne backend courant + éventuels paramètres GDrive).
-- Endpoint mise à jour: `PUT /api/v1/admin/storage-config` (valide et persiste la configuration).
-- Types exposés dans l'OpenAPI: `StorageConfigRead`, `StorageConfigUpdate`.
-- Validation serveur: si `backend=google_drive`, nécessite `gdrive_folder_id` et `gdrive_service_account_json_path` non vides.
+-- Taille des tables
+SELECT 
+    table_name,
+    pg_size_pretty(pg_total_relation_size(table_name::regclass)) as size
+FROM information_schema.tables 
+WHERE table_schema = 'public'
+ORDER BY pg_total_relation_size(table_name::regclass) DESC;
 
-Frontend:
-- Page: `frontend/src/app/admin/storage-config/page.tsx` (client component).
-- Logique métier isolée dans le hook `frontend/src/hooks/useStorageConfig.ts` (chargement initial, validation basique, PUT, état succès/erreur, auto-reset succès après 4s).
-- Sauvegarde optimiste: le hook marque `success=true` immédiatement, puis rollback (restaure les valeurs précédentes + affiche erreur) si la requête PUT échoue.
-- Accessibilité: libellés associés, feedback rôle `alert` / `status`, overlay de chargement avec `aria-busy`.
-- I18n minimal embarqué (fr/en) – à externaliser ultérieurement.
-- Toast (Radix) pour feedback de sauvegarde.
-- Champs masqués: GDrive uniquement si backend sélectionné = google_drive.
+-- Requêtes lentes
+SELECT 
+    query,
+    calls,
+    total_time,
+    mean_time,
+    rows
+FROM pg_stat_statements
+ORDER BY mean_time DESC
+LIMIT 10;
+```
 
-Tests E2E (Playwright):
-- Fichier: `frontend/tests-e2e/storage-config.spec.ts`.
-- Mock réseau sur `**/api/v1/admin/storage-config` pour isoler l'UI du backend pendant les tests UI.
-- Scénarios:
-  1. Affichage de la page (GET mock) + présence des éléments principaux.
-  2. Mise à jour (sélection Google Drive, saisie des champs, PUT mock) + assertion sur payload.
-- Sélecteurs robustes: attributs `data-testid` (`storage-config-*`).
-- Instrumentation (logs console/réponses) encore présente pour diagnostic – peut être allégée quand la stabilité est confirmée.
+## 📊 Monitoring
 
-Bypass Auth pour tests:
-- Middleware `frontend/src/middleware.ts` court-circuite la redirection login si la variable `NEXT_PUBLIC_DISABLE_AUTH=1` est définie (utilisée dans la config Playwright `webServer.env`).
-- Permet d'éviter d'orchestrer un vrai flux d'auth dans les tests de pages admin isolées.
+### Métriques clés
 
-Améliorations futures suggérées:
-- Optimistic update avec rollback visuel si échec.
-- Test e2e scénario d'erreur serveur (PUT 500).
-- Externalisation dictionnaire i18n + sélection langue dynamique.
-- Suppression instrumentation verbose une fois CI fiable.
+#### Métriques applicatives
 
-### Extension S3 & File d'attente (Étape 8)
+- **Latence des requêtes**: P50, P95, P99
+- **Taux d'erreur**: 4xx, 5xx par endpoint
+- **Throughput**: Requêtes par seconde
+- **Authentification**: Tentatives, succès, échecs
 
-Backend de stockage étendu pour supporter `s3` (champs ajoutés dans `storage_config`: `s3_bucket` obligatoire, `s3_region`, `s3_endpoint_url` optionnels). Migration: révision `20250812_0003`.
+#### Métriques métier
 
-Frontend: page admin mise à jour (sélecteur S3 + champs dynamiques). Hook `useStorageConfig` enrichi pour envoyer/recevoir les champs S3.
+- **Utilisateurs actifs**: Quotidien, hebdomadaire, mensuel
+- **Documents générés**: Par jour, par template
+- **Polices créées**: Par utilisateur, par période
+- **Stockage utilisé**: Par utilisateur, total
 
-File de tâches: introduction d'une couche minimale RQ (`backend/app/core/queue.py`) avec décorateur `@task` (méthode `.delay()`). Fallback inline si Redis absent ou indisponible.
+#### Métriques infrastructure
 
-Endpoint de démonstration reporting: `POST /api/v1/reports/dummy?report_id=...` renvoie un job_id (ou `inline`). Tâche exemple: `generate_dummy_report`.
+- **Base de données**: Connexions, requêtes lentes, taille
+- **Redis**: Mémoire utilisée, hit rate, connexions
+- **Système**: CPU, mémoire, disque, réseau
 
-Prochaines étapes recommandées:
-1. Ajouter un worker dédié (ex: script entrée `python -m rq worker default`).
-2. Persister l'état des jobs dans la table `report_jobs` (déjà dans le schéma initial), relier l'ID RQ.
-3. Endpoint de suivi: `GET /api/v1/reports/{job_id}`.
-4. Retenter (retries) + backoff: config RQ ou wrapper custom.
-5. Observabilité: métriques Prometheus (compteur jobs, durées) + logs structurés.
-6. Sécurité: quotas d'enqueue par utilisateur/admin sur une fenêtre de temps.
+### Health checks
 
-Notes opérationnelles:
-- Exécuter `alembic upgrade head` après pull pour disposer des colonnes S3.
-- Sans Redis: les tâches s'exécutent inline (utile pour tests unitaires rapides).
+#### Endpoints de santé
 
+```python
+# backend/app/api/routes/health.py
+
+@router.get("/health")
+async def health_check():
+    """Vérification santé générale"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.utcnow().isoformat(),
+        "version": "1.2.3",
+        "environment": settings.environment
+    }
+
+@router.get("/health/detailed")
+async def detailed_health():
+    """Vérification santé détaillée"""
+    checks = {
+        "database": await check_database(),
+        "redis": await check_redis(),
+        "storage": await check_storage(),
+        "external_apis": await check_external_apis()
+    }
+    
+    all_healthy = all(check["status"] == "healthy" for check in checks.values())
+    
+    return {
+        "status": "healthy" if all_healthy else "unhealthy",
+        "checks": checks,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+```
+
+## 🚨 Gestion des incidents
+
+### Procédures d'urgence
+
+#### API indisponible
+
+1. **Vérification rapide**
+   ```bash
+   # Status des services
+   docker-compose ps
+   
+   # Logs récents
+   docker-compose logs --tail=100 backend
+   
+   # Santé base de données
+   curl http://localhost:8000/health/db
+   ```
+
+2. **Actions correctives**
+   ```bash
+   # Redémarrage service
+   docker-compose restart backend
+   
+   # Vérification ressources
+   docker stats
+   free -h
+   df -h
+   ```
+
+#### Performance dégradée
+
+1. **Identification**
+   ```sql
+   -- Requêtes actives
+   SELECT pid, state, query_start, query
+   FROM pg_stat_activity
+   WHERE state = 'active' AND query_start < now() - interval '30 seconds';
+   ```
+
+2. **Actions immédiates**
+   ```sql
+   -- Terminer requête problématique
+   SELECT pg_terminate_backend(pid);
+   
+   -- Analyse requêtes lentes
+   SELECT query, calls, total_time, mean_time
+   FROM pg_stat_statements
+   ORDER BY mean_time DESC;
+   ```
+
+## 🔧 Maintenance préventive
+
+### Tâches quotidiennes
+
+```bash
+#!/bin/bash
+# scripts/daily_maintenance.sh
+
+# Nettoyage logs anciens (> 30 jours)
+find /var/log/monassurance -name "*.log" -mtime +30 -delete
+
+# Statistiques base de données
+psql -d monassurance -c "ANALYZE;"
+
+# Sauvegarde quotidienne
+pg_dump monassurance | gzip > "/backup/daily/db_$(date +%Y%m%d).sql.gz"
+```
+
+### Tâches hebdomadaires
+
+```bash
+#!/bin/bash
+# scripts/weekly_maintenance.sh
+
+# Vacuum base de données
+psql -d monassurance -c "VACUUM ANALYZE;"
+
+# Nettoyage documents orphelins
+python scripts/cleanup_orphaned_documents.py
+
+# Rapport de santé
+python scripts/generate_health_report.py
+```
+
+## 📈 Optimisation performances
+
+### Base de données
+
+#### Index optimisés
+
+```sql
+-- Index pour requêtes fréquentes
+CREATE INDEX CONCURRENTLY idx_policies_client_id ON policies(client_id);
+CREATE INDEX CONCURRENTLY idx_policies_created_at ON policies(created_at);
+CREATE INDEX CONCURRENTLY idx_audit_logs_timestamp ON audit_logs(timestamp);
+CREATE INDEX CONCURRENTLY idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+
+-- Index composites
+CREATE INDEX CONCURRENTLY idx_policies_client_status 
+ON policies(client_id, status) WHERE status = 'active';
+
+-- Index partiels
+CREATE INDEX CONCURRENTLY idx_users_active 
+ON users(email) WHERE is_active = true;
+```
+
+## 🔐 Sécurité
+
+### Audit sécurité
+
+```bash
+#!/bin/bash
+# scripts/security_audit.sh
+
+echo "=== Audit sécurité MonAssurance ==="
+
+# Analyse dépendances vulnérables
+pip audit
+
+# Scan sécurité code
+bandit -r backend/ -f json -o security_report.json
+
+echo "Audit terminé - voir security_report.json"
+```
+
+## 📞 Contacts et escalade
+
+### Équipe
+
+| Rôle | Nom | Contact | Disponibilité |
+|------|-----|---------|---------------|
+| Tech Lead | John Doe | +33123456789 | 24/7 |
+| DevOps | Jane Smith | +33987654321 | Heures ouvrées |
+| DBA | Bob Wilson | +33456789123 | Sur appel |
+
+### Procédure d'escalade
+
+1. **Niveau 1** (0-15 min): Auto-résolution, documentation
+2. **Niveau 2** (15-30 min): Équipe de développement
+3. **Niveau 3** (30+ min): Tech Lead + Management
+4. **Niveau 4** (critique): CEO + Communication externe

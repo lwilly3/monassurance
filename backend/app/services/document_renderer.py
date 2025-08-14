@@ -27,6 +27,7 @@ MIME_MAP = {
 
 class RenderResult:
     """Objet simple retourné après stockage du rendu."""
+
     def __init__(self, file_path: str, mime_type: str, size: int, checksum: str):
         self.file_path = file_path
         self.mime_type = mime_type
@@ -71,7 +72,7 @@ def render_template(content: str, context: dict[str, Any] | None, fmt: str) -> b
             for k, v in ctx.items():
                 ws.append([k, str(v)])
         else:
-            ws.append(["Empty"])    
+            ws.append(["Empty"])
         buffer = BytesIO()
         wb.save(buffer)
         return buffer.getvalue()

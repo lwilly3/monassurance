@@ -18,4 +18,4 @@ async def pydantic_validation_exception_handler(request: Request, exc: Validatio
     logger.warning(f"Model validation error: {exc.errors()}")
     return JSONResponse(status_code=422, content={"detail": exc.errors()})
 
-__all__ = ["validation_exception_handler", "pydantic_validation_exception_handler"]
+__all__ = ["pydantic_validation_exception_handler", "validation_exception_handler"]

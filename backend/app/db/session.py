@@ -2,14 +2,14 @@
 
 SQLite: create_all automatique pour dev/tests (Alembic pour prod/PostgreSQL).
 """
-from typing import Generator
+from collections.abc import Generator
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 
 from backend.app.core.config import get_settings
 from backend.app.db.base import Base
-from backend.app.db.models import *  # noqa: F401,F403 ensure models registered before create_all
+from backend.app.db.models import *  # noqa: F403 ensure models registered before create_all
 
 settings = get_settings()
 if settings.database_url.startswith("sqlite"):

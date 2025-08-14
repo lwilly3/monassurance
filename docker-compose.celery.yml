@@ -1,0 +1,119 @@
+# Configuration Docker pour Celery workers et services
+
+version: '3.8'
+
+services:
+  # Service existant backend
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgresql://monassurance_user:password@db:5432/monassurance_db
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    volumes:
+      - .:/app
+    command: ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  # Worker Celery pour rapports lourds
+  celery-worker-reports:
+    build: .
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgresql://monassurance_user:password@db:5432/monassurance_db
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    volumes:
+      - .:/app
+    command: ["python", "celery_manager.py", "worker", "reports", "2"]
+    restart: unless-stopped
+
+  # Worker Celery pour documents
+  celery-worker-documents:
+    build: .
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgresql://monassurance_user:password@db:5432/monassurance_db
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    volumes:
+      - .:/app
+    command: ["python", "celery_manager.py", "worker", "documents", "1"]
+    restart: unless-stopped
+
+  # Worker Celery général (notifications, maintenance)
+  celery-worker-general:
+    build: .
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgresql://monassurance_user:password@db:5432/monassurance_db
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    volumes:
+      - .:/app
+    command: ["python", "celery_manager.py", "worker", "celery,notifications", "1"]
+    restart: unless-stopped
+
+  # Scheduler Celery Beat pour tâches périodiques
+  celery-beat:
+    build: .
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DATABASE_URL=postgresql://monassurance_user:password@db:5432/monassurance_db
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+    volumes:
+      - .:/app
+      - ./celerybeat-schedule:/app/celerybeat-schedule
+    command: ["python", "celery_manager.py", "beat"]
+    restart: unless-stopped
+
+  # Flower - Interface web pour monitoring Celery
+  celery-flower:
+    build: .
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - .:/app
+    command: ["python", "celery_manager.py", "flower", "5555"]
+    restart: unless-stopped
+
+  # Services existants
+  db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=monassurance_user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=monassurance_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
+volumes:
+  postgres_data:
+  redis_data:

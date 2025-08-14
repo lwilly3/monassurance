@@ -1,153 +1,349 @@
-# MonAssurance
-![Couverture des tests](coverage_badge.svg)
+# MonAssurance SaaS Platform
 
-# MONASSURANCE – Backend
-
-![CI](https://github.com/lwilly3/monassurance/actions/workflows/ci.yml/badge.svg)
-[![codecov](https://codecov.io/gh/lwilly3/monassurance/branch/main/graph/badge.svg)](https://codecov.io/gh/lwilly3/monassurance)
-# MONASSURANCE – Backend
-
+![Coverage](coverage_badge.svg)
 ![CI](https://github.com/lwilly3/monassurance/actions/workflows/ci.yml/badge.svg)
 [![codecov](https://codecov.io/gh/lwilly3/monassurance/branch/main/graph/badge.svg)](https://codecov.io/gh/lwilly3/monassurance)
 
-Backend FastAPI du SaaS **MONASSURANCE** (auth, templates versionnés, génération documents PDF/Excel, URLs signées, rate limiting, audit, chiffrement & compression optionnels).
+## 🏢 Vue d'ensemble
 
-## Stack
+**MonAssurance** est une plateforme SaaS moderne de gestion d'assurance qui permet aux professionnels de gérer leurs clients, polices d'assurance, et de générer automatiquement des documents contractuels.
+
+### ✨ Fonctionnalités principales
+
+- 🔐 **Authentification sécurisée** avec JWT et refresh tokens rotatifs
+- 👥 **Gestion multi-utilisateurs** avec système de rôles (USER, MANAGER, ADMIN, SUPERADMIN)
+- 📋 **Gestion clients et polices** avec interface intuitive
+- 📄 **Templates versionnés** pour génération de documents
+- 🚀 **Génération PDF/Excel** automatisée et asynchrone
+- 🔗 **URLs signées** pour téléchargements sécurisés
+- 📊 **Audit complet** de toutes les actions
+- 🛡️ **Rate limiting** et protection contre les attaques
+- 📈 **Métriques Prometheus** intégrées
+- 🔄 **Stockage multi-backend** (Local, S3, Google Drive)
+
+## 🏗️ Architecture
+
+### Stack technologique
+
+**Backend:**
+- FastAPI (Python 3.11+) - API REST haute performance
+- SQLAlchemy 2.x - ORM moderne avec support async
+- PostgreSQL - Base de données principale
+- Redis - Cache et queue système
+- Alembic - Migrations de base de données
+
+**Frontend:**
+- Next.js 14+ - Framework React full-stack
+- TypeScript - Typage statique
+- Tailwind CSS - Framework CSS utilitaire
+- Playwright - Tests end-to-end
+
+**DevOps:**
+- Docker - Containerisation
+- GitHub Actions - CI/CD
+- Pytest - Tests avec 86%+ de couverture
+- Ruff, MyPy, Bandit - Qualité de code
+
+### Architecture modulaire
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                  Frontend (Next.js)                        │
+│              Interface utilisateur                         │
+├─────────────────────────────────────────────────────────────┤
+│                 API Layer (FastAPI)                        │
+│            Routes REST │ Authentification                  │
+├─────────────────────────────────────────────────────────────┤
+│                Business Logic Layer                        │
+│        Services │ Templates │ Documents                    │
+├─────────────────────────────────────────────────────────────┤
+│                  Storage Layer                             │
+│     PostgreSQL │ Redis │ File Storage                     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+## 🚀 Démarrage rapide
+
+### Prérequis
 
 - Python 3.11+
-- FastAPI / Uvicorn
-- SQLAlchemy 2.x
-- Alembic (migrations)
-- PostgreSQL (dev possible en SQLite)
-- JWT (auth) via `python-jose`
-- Hash mots de passe via `passlib[bcrypt]`
+- Node.js 18+ (pour le frontend)
+- PostgreSQL 14+ (optionnel, SQLite pour développement)
+- Redis 6+ (optionnel, fallback en mémoire)
 
-## Structure
+### Installation
 
-```
-backend/
-	app/
-		api/
-			routes/        # Endpoints versionnés
-			deps.py        # Dépendances (DB, auth, etc.)
-		core/            # Config & sécurité
-		db/              # Session, base, modèles
-		schemas/         # Schémas Pydantic
-		main.py          # Point d'entrée FastAPI
-alembic/
-	versions/          # Scripts de migration
-alembic.ini
-.env.example
-```
-
-## Démarrage rapide (développement local)
-
-1. Créer l'environnement virtuel
+1. **Cloner le repository**
 ```bash
+git clone https://github.com/lwilly3/monassurance.git
+cd monassurance
+```
+
+2. **Setup Backend**
+```bash
+# Environnement virtuel Python
 python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-2. Copier le fichier d'exemple d'environnement
-```bash
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
+
+# Installation des dépendances
+pip install -r requirements-dev.txt
+
+# Configuration
 cp .env.example .env
+# Éditer .env selon vos besoins
 ```
-3. (Optionnel) Lancer une base PostgreSQL locale (ex: Docker)
+
+3. **Base de données**
 ```bash
-docker run -d --name monassurance-db -e POSTGRES_PASSWORD=devpass -e POSTGRES_USER=monassurance -e POSTGRES_DB=monassurance -p 5432:5432 postgres:16
-```
-4. Ajuster `DATABASE_URL` dans `.env` si besoin.
-5. Créer les tables (dev SQLite ou après config Postgres)
-```bash
+# Option 1: SQLite (développement simple)
+# Rien à faire, fichier auto-créé
+
+# Option 2: PostgreSQL (recommandé)
+docker run -d --name postgres-dev \
+  -e POSTGRES_DB=monassurance \
+  -e POSTGRES_USER=dev \
+  -e POSTGRES_PASSWORD=devpass \
+  -p 5432:5432 postgres:16
+
+# Appliquer les migrations
 alembic upgrade head
 ```
-6. Lancer l'API
+
+4. **Lancer l'application**
 ```bash
-uvicorn backend.app.main:app --reload
+# Backend API
+make dev
+# ou: uvicorn backend.app.main:app --reload
+
+# Frontend (nouveau terminal)
+cd frontend
+npm install
+npm run dev
 ```
 
-Accès docs: http://127.0.0.1:8000/docs
+### Accès
 
-Health:
-- /health: statut général
-- /health/db: ping base de données
+- **API Documentation**: http://localhost:8000/docs
+- **Interface Web**: http://localhost:3000
+- **Health Check**: http://localhost:8000/health
 
-## Sécurité & robustesse
+## 📖 Documentation
 
-- Rotation complète des refresh tokens: utilisation du refresh révoque l'ancien et émet un nouveau.
-- Endpoints:
-	- `POST /api/v1/auth/logout` et `POST /api/v1/auth/revoke` — révoquent un refresh token passé.
-	- `POST /api/v1/auth/revoke-all` — révoque tous les refresh tokens de l'utilisateur courant.
-- Rate limiting générique (désactivé par défaut): activable via `RATE_LIMIT_ENABLED=true`. Limites/minute configurables (`DEFAULT_RATE_LIMIT_PER_MINUTE`, `AUTH_RATE_LIMIT_PER_MINUTE`). Redis utilisé si dispo, sinon fallback mémoire.
-- Limitation spécifique téléchargement de documents déjà en place (par utilisateur/lien signé).
-- CORS configurable via variables d'environnement (`CORS_ORIGINS`, `CORS_ALLOW_*`).
-- En-têtes de sécurité par défaut: `X-Frame-Options`, `Referrer-Policy`, `X-Content-Type-Options: nosniff`, `Content-Security-Policy` (si `SECURITY_CSP` défini), `Strict-Transport-Security` (si `SECURITY_HSTS=true`).
+| Document | Description |
+|----------|-------------|
+| [Architecture](docs/ARCHITECTURE.md) | Vue d'ensemble de l'architecture système |
+| [Guide développement](docs/DEVELOPMENT.md) | Setup environnement et workflows |
+| [Documentation API](docs/API.md) | Référence complète de l'API REST |
+| [Workflow](docs/WORKFLOW.md) | Processus métier et cas d'usage |
+| [Maintenance](docs/MAINTENANCE.md) | Guide d'exploitation et monitoring |
 
-### Sessions d'appareils (refresh tokens)
+## 🛠️ Commandes utiles
 
-Les refresh tokens sont stockés hashés en base, avec rotation à chaque usage. Nous exposons des endpoints pour que l'utilisateur gère ses sessions ("mes appareils"):
-
-- `GET /api/v1/auth/devices` — liste les sessions actives (non révoquées et non expirées) avec métadonnées:
-	- `device_label`, `ip_address`, `user_agent`, `issued_at`, `expires_at`.
-- `DELETE /api/v1/auth/devices/{id}` — révoque la session identifiée si elle appartient à l'utilisateur courant.
-
-Pendant `POST /api/v1/auth/login` et `POST /api/v1/auth/refresh`, des métadonnées d'appareil sont enregistrées (label, IP, user-agent) pour alimenter cette liste.
-
-Protection brute-force: le login est limité par IP et par compte (Redis si disponible, sinon fallback mémoire) avec erreurs 429 au-delà du seuil minute.
-
-#### Try it — Mes appareils (local)
-
-Prérequis: API locale sur http://127.0.0.1:8000 et `jq` installé.
-
-1) Enregistrer un utilisateur de test
-
+### Développement
 ```bash
-curl -s -X POST http://127.0.0.1:8000/api/v1/auth/register \
-	-H "Content-Type: application/json" \
-	-d '{"email":"deviceuser@example.com","password":"pass"}' | jq
+make install        # Installation complète
+make dev           # Lancement avec reload
+make test          # Tests unitaires
+make coverage      # Tests avec couverture
 ```
 
-2) Se connecter et récupérer les tokens
-
+### Qualité de code
 ```bash
-RESP=$(curl -s -X POST http://127.0.0.1:8000/api/v1/auth/login \
-	-H "Content-Type: application/json" \
-	-d '{"email":"deviceuser@example.com","password":"pass"}')
-ACCESS=$(echo "$RESP" | jq -r .access_token)
-REFRESH=$(echo "$RESP" | jq -r .refresh_token)
-echo "ACCESS=$ACCESS"
-echo "REFRESH=$REFRESH"
+make lint          # Vérification syntaxe (Ruff)
+make format        # Formatage automatique
+make type-check    # Vérification types (MyPy)
+make security      # Analyse sécurité (Bandit)
+make check-strict  # Validation complète (CI)
 ```
 
-3) Lister les appareils (sessions actives)
-
+### Base de données
 ```bash
-curl -s http://127.0.0.1:8000/api/v1/auth/devices \
-	-H "Authorization: Bearer $ACCESS" | jq
+make db-migrate    # Nouvelle migration
+make db-upgrade    # Appliquer migrations
+make db-downgrade  # Rollback migration
+make db-reset      # Reset complet
 ```
 
-4) Révoquer le premier appareil de la liste
+## 🧪 Tests
+### Stratégie de test
+
+- **Tests unitaires**: 40+ tests avec 86%+ de couverture
+- **Tests d'intégration**: API endpoints et base de données
+- **Tests E2E**: Workflows complets avec Playwright
+- **Tests de sécurité**: Analyse statique avec Bandit
 
 ```bash
-DEVICE_ID=$(curl -s http://127.0.0.1:8000/api/v1/auth/devices \
-	-H "Authorization: Bearer $ACCESS" | jq -r '.[0].id')
-curl -i -X DELETE http://127.0.0.1:8000/api/v1/auth/devices/$DEVICE_ID \
-	-H "Authorization: Bearer $ACCESS"
+# Tests unitaires
+pytest tests/ -v
+
+# Tests avec couverture
+pytest --cov=backend --cov-report=html
+
+# Tests E2E
+cd frontend
+npm run test:e2e
+
+# Tests de sécurité
+make security
 ```
 
-5) Vérifier qu'il a disparu
+## 🔒 Sécurité
+
+### Authentification
+- **JWT avec refresh tokens rotatifs** pour prévenir la compromission
+- **Hachage bcrypt** des mots de passe (12 rounds minimum)
+- **Sessions multi-appareils** avec gestion granulaire
+- **Révocation de tokens** individuelle ou globale
+
+### Protection des données
+- **URLs signées** pour téléchargements sécurisés
+- **Rate limiting** configurable par endpoint
+- **Validation stricte** des entrées utilisateur
+- **Isolation des données** par utilisateur/organisation
+
+### Monitoring et audit
+- **Logs d'audit** complets de toutes les actions
+- **Métriques de sécurité** avec alerting
+- **Headers de sécurité** (HSTS, CSP, etc.)
+- **Protection CSRF/XSS** intégrée
+
+## 📊 Observabilité
+
+### Métriques Prometheus
+
+- **Métriques applicatives**: requêtes, erreurs, latence
+- **Métriques métier**: polices créées, documents générés
+- **Métriques infrastructure**: base de données, Redis, file storage
 
 ```bash
-curl -s http://127.0.0.1:8000/api/v1/auth/devices \
-	-H "Authorization: Bearer $ACCESS" | jq
+# Export des métriques
+curl http://localhost:8000/metrics
 ```
 
-## Observabilité (logs & metrics)
+### Logs structurés
 
-- Logs
-	- Format JSON optionnel: activer avec `LOG_JSON=true` (stdout). Les logs incluent `X-Request-ID` (corrélation) si fourni, sinon un identifiant est généré et renvoyé en en-tête réponse.
-	- En-tête `X-Response-Time` ajouté sur chaque réponse.
+```json
+{
+  "timestamp": "2024-01-15T10:00:00Z",
+  "level": "INFO",
+  "message": "Policy created",
+  "request_id": "req_abc123",
+  "user_id": 1,
+  "policy_id": 456,
+  "duration_ms": 125
+}
+```
+
+### Health checks
+
+```bash
+# Santé générale
+curl http://localhost:8000/health
+
+# Santé base de données
+curl http://localhost:8000/health/db
+```
+
+## 🚀 Déploiement
+
+### Environnements
+
+| Environnement | Base de données | Cache | Stockage |
+|---------------|----------------|-------|----------|
+| **Development** | SQLite | Mémoire | Local |
+| **Staging** | PostgreSQL | Redis | S3 |
+| **Production** | PostgreSQL HA | Redis Cluster | S3 + CDN |
+
+### Docker
+
+```bash
+# Build de l'image
+docker build -t monassurance:latest .
+
+# Lancement avec Docker Compose
+docker-compose up -d
+
+# Variables d'environnement
+docker run -e DATABASE_URL=postgresql://... monassurance:latest
+```
+
+### Variables d'environnement
+
+| Variable | Description | Défaut |
+|----------|-------------|--------|
+| `DATABASE_URL` | URL de connexion PostgreSQL | SQLite local |
+| `REDIS_URL` | URL de connexion Redis | Fallback mémoire |
+| `SECRET_KEY` | Clé secrète JWT | Généré |
+| `CORS_ORIGINS` | Origines CORS autorisées | localhost |
+| `LOG_LEVEL` | Niveau de logs | INFO |
+
+## 🤝 Contribution
+
+### Workflow
+
+1. **Fork** du repository
+2. **Branche** pour votre fonctionnalité (`git checkout -b feature/amazing-feature`)
+3. **Commit** avec messages conventionnels (`git commit -m 'feat: add amazing feature'`)
+4. **Tests** et validation qualité (`make check-strict`)
+5. **Push** vers votre branche (`git push origin feature/amazing-feature`)
+6. **Pull Request** avec description détaillée
+
+### Standards de code
+
+- **Python**: PEP 8 avec Ruff
+- **TypeScript**: Standard avec ESLint
+- **Commits**: Conventional Commits
+- **Tests**: Couverture minimale 85%
+- **Documentation**: Docstrings et README à jour
+
+## 📄 Licence
+
+Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour les détails.
+
+## 🆘 Support
+
+### Issues et bugs
+- [GitHub Issues](https://github.com/lwilly3/monassurance/issues)
+
+### Documentation
+- [Wiki du projet](https://github.com/lwilly3/monassurance/wiki)
+- [API Reference](docs/API.md)
+
+### Contact
+- Email: support@monassurance.com
+- Slack: [#monassurance](https://workspace.slack.com/channels/monassurance)
+
+---
+
+**MonAssurance** - Simplifiez la gestion de vos assurances avec une plateforme moderne et sécurisée.
+
+## 🗂️ Structure du projet
+
+```
+monassurance/
+├── 📁 backend/                 # API FastAPI
+│   ├── 📁 app/
+│   │   ├── 📁 api/            # Routes et endpoints
+│   │   ├── 📁 core/           # Configuration et sécurité
+│   │   ├── 📁 db/             # Modèles et base de données
+│   │   ├── 📁 schemas/        # Schémas Pydantic
+│   │   ├── 📁 services/       # Logique métier
+│   │   └── 📄 main.py         # Point d'entrée API
+│   └── 📁 tests/              # Tests backend
+├── 📁 frontend/               # Interface Next.js
+│   ├── 📁 src/
+│   │   ├── 📁 app/           # App Router Next.js
+│   │   ├── 📁 components/    # Composants React
+│   │   └── 📁 lib/           # Utilitaires
+│   └── 📁 tests-e2e/         # Tests Playwright
+├── 📁 docs/                   # Documentation
+├── 📁 scripts/               # Scripts utilitaires
+├── 📁 alembic/               # Migrations DB
+├── 📄 Makefile               # Commandes de développement
+├── 📄 docker-compose.yml     # Services Docker
+└── 📄 README.md              # Ce fichier
+```
 	- Seuils configurables: `SLOW_QUERY_MS` (requêtes SQL lentes), `HTTP_WARN_MS` (latence HTTP). `DEBUG_SQL` active l’echo SQLAlchemy (dev).
 - Health
 	- `GET /health`: ping simple.

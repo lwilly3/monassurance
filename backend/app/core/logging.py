@@ -7,7 +7,8 @@ Expose:
  - Compteurs Prometheus optionnels
 """
 import sys
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable
+from typing import Any, Callable
 
 from loguru import logger
 
@@ -119,4 +120,4 @@ class ExceptionHandlingMiddleware:
             await response(scope, receive, send)
 
 
-__all__ = ["logger", "RequestLoggerMiddleware", "ExceptionHandlingMiddleware"]
+__all__ = ["ExceptionHandlingMiddleware", "RequestLoggerMiddleware", "logger"]

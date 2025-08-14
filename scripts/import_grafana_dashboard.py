@@ -29,7 +29,7 @@ def main() -> int:
     if not url or not token:
         print("(Info) GRAFANA_URL ou GRAFANA_TOKEN absent: skip import.")
         return 0
-    with open(path, 'r', encoding='utf-8') as f:
+    with open(path, encoding='utf-8') as f:
         data = json.load(f)
     payload = {"dashboard": data, "overwrite": True}
     req = urllib.request.Request(url.rstrip('/') + API_PATH, method='POST')

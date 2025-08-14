@@ -25,7 +25,7 @@ def test_dummy_report_queued_then_finished(monkeypatch):
     # Deuxième étape: status -> patch fetch pour retourner finished
     class DummyQueueFetch:
         connection = object()
-    def fake_fetch(jid, connection=None):  # noqa: ANN001
+    def fake_fetch(jid, connection=None):
         assert jid == job_id
         return DummyFinishedJob(jid)
     # Injecter Job.fetch

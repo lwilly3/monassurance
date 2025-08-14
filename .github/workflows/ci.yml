@@ -36,21 +36,20 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Lint (ruff)
-        run: |
-          ruff --version
-          ruff check .
-
-      - name: Type check (mypy)
-        run: |
-          mypy --version
-          mypy --config-file mypy.ini .
-
-      - name: Run tests (with coverage)
+      - name: Quality checks (strict lint+type+tests+coverage)
         env:
           DATABASE_URL: sqlite:///./monassurance.db
         run: |
-          pytest -q --maxfail=1 --disable-warnings --cov=backend --cov-report=term-missing --cov-report=xml
+          make check-strict
+
+      - name: Generate coverage badge
+        if: always()
+        run: |
+          make badge || true
+
+      - name: Security scan (Bandit) - strict mode
+        run: |
+          make security-strict
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -63,12 +62,15 @@ jobs:
           fail_ci_if_error: false
           verbose: true
 
-      - name: Upload coverage (artifact)
+      - name: Upload coverage & badge (artifacts)
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: ./.coverage*
+          name: coverage-and-badge
+          path: |
+            coverage.xml
+            coverage_badge.svg
+            .coverage*
 
   build-test-postgres:
     runs-on: ubuntu-latest

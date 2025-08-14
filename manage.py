@@ -61,10 +61,10 @@ def cmd_lint() -> int:
     Convention: échec immédiat si ruff échoue (évite compilation mypy inutile).
     Retourne le premier code de sortie non nul rencontré.
     """
-    code = run([sys.executable, "-m", "ruff", "check", "--fix", "."])  
+    code = run([sys.executable, "-m", "ruff", "check", "--fix", "."])
     if code != 0:
         return code
-    return run([sys.executable, "-m", "mypy", "backend/app"])  
+    return run([sys.executable, "-m", "mypy", "backend/app"])
 
 
 def cmd_test() -> int:
@@ -72,7 +72,7 @@ def cmd_test() -> int:
 
     Utilisé pour feedback rapide local ou étape CI.
     """
-    return run([sys.executable, "-m", "pytest", "-q"]) 
+    return run([sys.executable, "-m", "pytest", "-q"])
 
 
 def cmd_testcov() -> int:
@@ -131,6 +131,11 @@ COMMANDS = {
     "rotate-keys": lambda args: cmd_rotate_keys(args[0] if args else None),
     "show-settings": lambda args: cmd_show_settings(),
     "rq-worker": lambda args: run([sys.executable, "-m", "rq", "worker", "default"]),
+    # Nouvelles commandes Celery
+    "celery-worker": lambda args: run([sys.executable, "celery_manager.py", "worker"] + args),
+    "celery-beat": lambda args: run([sys.executable, "celery_manager.py", "beat"] + args),
+    "celery-flower": lambda args: run([sys.executable, "celery_manager.py", "flower"] + args),
+    "celery-status": lambda args: run([sys.executable, "celery_manager.py", "status"] + args),
 }
 
 

@@ -7,7 +7,7 @@ def test_metrics_error_counter(monkeypatch):
     # Monkeypatch datetime.now pour provoquer une exception dans le bloc try
     class FakeDateTime:
         @staticmethod
-        def now(tz):  # noqa: ANN001
+        def now(tz):
             raise RuntimeError("boom")
 
     original_datetime = report_tasks.datetime

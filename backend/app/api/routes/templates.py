@@ -8,7 +8,6 @@ Règles:
  - Numérotation des versions incrémentale et immuable.
 """
 from hashlib import sha256
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
 from fastapi.responses import HTMLResponse
@@ -68,8 +67,8 @@ def create_template(payload: TemplateCreate, db: Session = Depends(get_db), curr
     db.refresh(tpl)
     return tpl
 
-@router.get("/", response_model=List[TemplateRead])
-def list_templates(skip: int = 0, limit: int = 100, active: Optional[bool] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> list[models.Template]:
+@router.get("/", response_model=list[TemplateRead])
+def list_templates(skip: int = 0, limit: int = 100, active: bool | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> list[models.Template]:
     ensure_admin_or_manager(current_user)
     q = db.query(models.Template)
     if active is not None:
@@ -147,7 +146,7 @@ def delete_template(template_id: int, db: Session = Depends(get_db), current_use
 def upload_template_file(
     template_id: int,
     file: UploadFile = File(...),
-    checksum: Optional[str] = Form(None),
+    checksum: str | None = Form(None),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> models.TemplateVersion:

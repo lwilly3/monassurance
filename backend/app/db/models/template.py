@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 
 class Template(Base):
     """Template logique (métadonnées), versions séparées dans TemplateVersion."""
+
     __tablename__ = "templates"
     __table_args__ = (UniqueConstraint("name", "type", "scope", name="uq_template_name_type_scope"),)
 

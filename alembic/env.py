@@ -13,7 +13,7 @@ from backend.app.core.config import get_settings
 
 # Import des modèles pour peupler Base.metadata
 from backend.app.db import models  # noqa: F401
-from backend.app.db.base import Base  # noqa
+from backend.app.db.base import Base
 
 config = context.config
 settings = get_settings()

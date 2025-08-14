@@ -8,6 +8,7 @@ from backend.app.db.base import Base
 
 class ReportJob(Base):
     """Job de génération de rapports (pour future exécution asynchrone)."""
+
     __tablename__ = "report_jobs"
     id: Mapped[int] = mapped_column(primary_key=True)
     job_type: Mapped[str | None] = mapped_column(String(30))

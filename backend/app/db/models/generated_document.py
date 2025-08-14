@@ -8,6 +8,7 @@ from backend.app.db.base import Base
 
 class GeneratedDocument(Base):
     """Document généré et stocké (path + métadonnées de rendu)."""
+
     __tablename__ = "generated_documents"
     id: Mapped[int] = mapped_column(primary_key=True)
     document_type: Mapped[str | None] = mapped_column(String(30))

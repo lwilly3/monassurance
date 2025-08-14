@@ -6,7 +6,7 @@ Fallback: si Redis/RQ indisponible, exécute la fonction inline (mode dégradé 
 from __future__ import annotations
 
 from functools import lru_cache, wraps
-from typing import Any, Callable, Optional, Protocol
+from typing import Any, Callable, Protocol
 
 from backend.app.core.redis import get_redis
 
@@ -21,12 +21,12 @@ except Exception:  # pragma: no cover
 
 
 class EnqueueCallable(Protocol):  # typing surface minimale pour notre usage
-    def enqueue(self, f: Callable[..., Any], *args: Any, **kwargs: Any) -> Any: ...  # noqa: D401,E701
+    def enqueue(self, f: Callable[..., Any], *args: Any, **kwargs: Any) -> Any: ...
 
 
 @lru_cache(maxsize=1)
-def get_queue() -> Optional[EnqueueCallable]:
-    q: Optional[EnqueueCallable] = None
+def get_queue() -> EnqueueCallable | None:
+    q: EnqueueCallable | None = None
     if RQQueue is not None:
         try:
             r = get_redis()

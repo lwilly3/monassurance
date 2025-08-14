@@ -4,8 +4,8 @@ Ce package contient des modules typés utilisés par mypy.
 """
 
 __all__ = [
+    "document_renderer",
     "gdrive_backend",
     "storage_provider",
     "template_storage",
-    "document_renderer",
 ]

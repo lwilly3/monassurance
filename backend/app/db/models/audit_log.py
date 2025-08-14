@@ -8,6 +8,7 @@ from backend.app.db.base import Base
 
 class AuditLog(Base):
     """Trace des actions sensibles (download, generate, purge...)."""
+
     __tablename__ = "audit_logs"
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))

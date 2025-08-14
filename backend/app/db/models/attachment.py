@@ -8,6 +8,7 @@ from backend.app.db.base import Base
 
 class Attachment(Base):
     """Fichier joint à un objet métier (stockage local)."""
+
     __tablename__ = "attachments"
     id: Mapped[int] = mapped_column(primary_key=True)
     object_type: Mapped[str | None] = mapped_column(String(50))

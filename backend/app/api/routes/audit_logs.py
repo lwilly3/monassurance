@@ -55,6 +55,7 @@ def list_audit_logs(
     Notes:
       - Les filtres *contains* utilisent ILIKE (PostgreSQL) ou LIKE (SQLite) selon le backend.
       - Fournir simultanément action et action_contains restreint davantage (intersection).
+
     """
     _require_manager(current_user)
     q = db.query(models.AuditLog)

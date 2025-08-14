@@ -97,7 +97,7 @@ def test_signed_url_and_rate_limit():
     assert r.status_code == 200
     url = r.json()["url"]
     # Requêtes rapides pour déclencher rate limit (3 autorisées)
-    for i in range(3):
+    for _i in range(3):
         d = client.get(url, headers={"Authorization": f"Bearer {token}"})
         assert d.status_code == 200, d.text
     d = client.get(url, headers={"Authorization": f"Bearer {token}"})

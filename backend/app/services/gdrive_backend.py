@@ -5,7 +5,7 @@ Backend Google Drive pour le stockage des templates.
 """
 import io
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from google.oauth2 import service_account  # type: ignore
 from googleapiclient.discovery import build  # type: ignore
@@ -30,7 +30,7 @@ class GoogleDriveStorageBackend:
         )
         self._drive = build("drive", "v3", credentials=self._creds)
 
-    def store_bytes(self, data: bytes, filename: str | None = None, content_type: Optional[str] = None) -> str:
+    def store_bytes(self, data: bytes, filename: str | None = None, content_type: str | None = None) -> str:
         assert self._drive is not None  # Pour mypy
         name = filename or "untitled"
         media = MediaIoBaseUpload(io.BytesIO(data), mimetype=content_type or "text/plain")

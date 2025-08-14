@@ -8,6 +8,7 @@ from backend.app.db.base import Base
 
 class IntegrationConfig(Base):
     """Configuration d'intégration externe pour une compagnie."""
+
     __tablename__ = "integration_configs"
     id: Mapped[int] = mapped_column(primary_key=True)
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id", ondelete="CASCADE"), unique=True)

@@ -17,7 +17,6 @@ import hmac
 import time
 import zlib
 from pathlib import Path
-from typing import Optional
 
 from cryptography.fernet import Fernet
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -195,7 +194,7 @@ def create_signed_download_url(doc_id: int, ttl_seconds: int = 300, db: Session 
     return {"url": f"/api/v1/documents/{doc_id}/download?exp={expires}&sig={sig}", "expires": expires}
 
 @router.get("/{doc_id}/download")
-def download_document(request: Request, doc_id: int, exp: Optional[int] = None, sig: Optional[str] = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> FileResponse:
+def download_document(request: Request, doc_id: int, exp: int | None = None, sig: str | None = None, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)) -> FileResponse:
     # Si signature présente, on autorise sans rôle supplémentaire sinon contrôle standard
     if sig and exp:
         if not _verify_signature(doc_id, exp, sig):

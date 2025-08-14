@@ -8,6 +8,7 @@ from backend.app.db.base import Base
 
 class DeclarationBatch(Base):
     """Lot de déclaration (période + statut + document récap)."""
+
     __tablename__ = "declaration_batches"
     id: Mapped[int] = mapped_column(primary_key=True)
     company_id: Mapped[int | None] = mapped_column(ForeignKey("companies.id", ondelete="SET NULL"))

@@ -1,6 +1,6 @@
 import os
 import pathlib
-from typing import Any, Callable, Dict
+from typing import Any, Callable
 
 import pytest
 
@@ -24,7 +24,7 @@ except Exception:
 
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_sessionstart(session: Any) -> None:  # noqa: ANN001
+def pytest_sessionstart(session: Any) -> None:
     # Nettoyage du fichier DB de tests s'il existe
     if TEST_DB_PATH.exists():
         TEST_DB_PATH.unlink(missing_ok=True)  # type: ignore[arg-type]
@@ -36,7 +36,7 @@ def pytest_sessionstart(session: Any) -> None:  # noqa: ANN001
 
 
 @pytest.hookimpl(trylast=True)
-def pytest_sessionfinish(session: Any, exitstatus: int) -> None:  # noqa: ANN001,ARG001
+def pytest_sessionfinish(session: Any, exitstatus: int) -> None:
     # Optionnel: nettoyer les artefacts de tests
     if TEST_DB_PATH.exists():
         try:
@@ -50,7 +50,7 @@ def pytest_sessionfinish(session: Any, exitstatus: int) -> None:  # noqa: ANN001
 def admin_headers_factory() -> Callable[[str], dict[str, str]]:
     """Factory de headers admin avec cache par email pour éviter logins répétés."""
     from tests.utils import auth_headers  # import local pour éviter import précoce app
-    cache: Dict[str, dict[str, str]] = {}
+    cache: dict[str, dict[str, str]] = {}
 
     def _get(email: str = "admin.fixture@example.com") -> dict[str, str]:
         if email not in cache:

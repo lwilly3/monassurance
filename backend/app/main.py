@@ -1,6 +1,7 @@
 """Application FastAPI principale (wiring des routes et middlewares)."""
+from collections.abc import AsyncIterator, Awaitable
 from contextlib import asynccontextmanager
-from typing import AsyncIterator, Awaitable, Callable
+from typing import Callable
 
 from fastapi import FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError

@@ -9,6 +9,7 @@ class AuditLogRead(BaseModel):
 
     Pas d'exposition d'informations sensibles au-delà des champs déjà stockés.
     """
+
     model_config = ConfigDict(from_attributes=True)
     id: int
     user_id: Optional[int]

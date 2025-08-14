@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 class Policy(Base):
     """Police d'assurance (lien client + compagnie)."""
+
     __tablename__ = "policies"
     id: Mapped[int] = mapped_column(primary_key=True)
     policy_number: Mapped[str] = mapped_column(String(100), unique=True, index=True)
@@ -29,4 +30,4 @@ class Policy(Base):
     currency: Mapped[str | None] = mapped_column(String(3), server_default=text("'XAF'"))
 
     client: Mapped[Client] = relationship(back_populates="policies")
-    company: Mapped[Optional[Company]] = relationship(back_populates="policies")
+    company: Mapped[Company | None] = relationship(back_populates="policies")
