@@ -110,6 +110,27 @@ docker run -d --name postgres-dev \
 alembic upgrade head
 ```
 
+### 👨‍💼 Utilisateur Administrateur
+
+Un utilisateur admin est créé automatiquement lors des migrations :
+
+```
+Email:        admin@monassurance.com
+Mot de passe: D3faultpass
+```
+
+⚠️ **Changez ce mot de passe dès la première connexion !**
+
+```bash
+# Changer le mot de passe admin
+python change_admin_password.py
+
+# Tester l'authentification
+python test_admin_auth.py
+```
+
+📖 Voir [ADMIN_USER.md](ADMIN_USER.md) pour plus de détails.
+
 4. **Lancer l'application**
 ```bash
 # Backend API
