@@ -1,5 +1,6 @@
-from tests.utils import auth_headers, client
 import pytest
+
+from tests.utils import auth_headers, client
 
 
 @pytest.mark.skip(reason="Rate limiting issues in test suite - test manually")

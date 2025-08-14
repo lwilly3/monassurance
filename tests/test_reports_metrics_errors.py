@@ -1,5 +1,6 @@
-from tests.utils import auth_headers, client
 import pytest
+
+from tests.utils import auth_headers, client
 
 
 @pytest.mark.skip(reason="Rate limiting issues in test suite - test manually")
@@ -28,6 +29,5 @@ def test_metrics_error_counter(monkeypatch):
     m = client.get("/metrics")
     if m.status_code == 404:
         return
-    text = m.text
     # Les compteurs d'erreur peuvent être présents ou non selon l'implémentation
     # Pas d'assertion stricte car dépend de la gestion des erreurs

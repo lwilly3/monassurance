@@ -74,27 +74,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-def main():
-    print("🎯 Test rapide déploiement Celery")
-    print("=" * 40)
-    
-    if test_health():
-        test_reports_without_auth()
-        
-        print("\n📊 Résumé:")
-        print("✅ API FastAPI démarrée")
-        print("✅ Routes rapports configurées") 
-        print("⚠️  Celery indisponible (Redis nécessaire)")
-        print("✅ Fallback gracieux fonctionnel")
-        
-        print("\n🚀 Pour tester complètement:")
-        print("1. Installer Docker ou Redis")
-        print("2. Démarrer worker Celery") 
-        print("3. Créer utilisateur admin")
-        print("4. Relancer les tests")
-    else:
-        print("❌ API non accessible")
-
-if __name__ == "__main__":
-    main()

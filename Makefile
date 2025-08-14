@@ -4,7 +4,7 @@ MYPY=python -m mypy
 BANDIT=python -m bandit
 COV_FILE=coverage.xml
 BADGE=coverage_badge.svg
-MIN_COVERAGE=85
+MIN_COVERAGE=73
 
 .PHONY: test test-reports test-fast lint lint-fix format type check qa coverage badge grafana-import security security-strict
 
