@@ -53,8 +53,8 @@ def main():
     print("=" * 30)
     
     # Test de santé en premier
-    print("
-1. 💊 Test Health")
+    print(" " \
+    "1. 💊 Test Health")
     if test_health_endpoint():
         print("✅ Service accessible")
     else:
@@ -62,15 +62,14 @@ def main():
         return
     
     # Test de rapport lourd
-    print("
-2. 📄 Test Rapport Lourd")
+    print(" " \
+    "2. 📄 Test Rapport Lourd")
     if test_heavy_report():
         print("✅ Rapport généré")
     else:
         print("❌ Erreur génération")
     
-    print("
-✨ Demo terminée !")
+    print(" ✨ Demo terminée !")
 
 
 if __name__ == "__main__":

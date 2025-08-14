@@ -33,12 +33,21 @@ def ensure_user(email: str) -> models.User:
 
 
 def auth_headers(email: str, role: str | None = None):
+    import time
     if role == "user":
         ensure_user(email)
     else:
         ensure_admin(email)
     resp = client.post("/api/v1/auth/login", json={"email": email, "password": "pass"})
-    assert resp.status_code == 200
+    if resp.status_code == 429:
+        # Rate limited, wait longer and retry
+        time.sleep(3)
+        resp = client.post("/api/v1/auth/login", json={"email": email, "password": "pass"})
+        if resp.status_code == 429:
+            # Still rate limited, wait even longer
+            time.sleep(5)
+            resp = client.post("/api/v1/auth/login", json={"email": email, "password": "pass"})
+    assert resp.status_code == 200, f"Auth failed with status {resp.status_code}: {resp.text}"
     return {"Authorization": f"Bearer {resp.json()['access_token']}"}
 
 
